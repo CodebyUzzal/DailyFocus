@@ -53,11 +53,14 @@ private val DarkColorScheme = darkColorScheme(
     onError = Error40,
     errorContainer = Error40,
     onErrorContainer = Error80,
-    surface = Neutral10,
+    background = Neutral10,
+    onBackground = Neutral90,
+    surface = Color(0xFF1C1F26), // Slightly tinted dark surface (not pure black)
     onSurface = Neutral90,
-    surfaceVariant = NeutralVariant30,
-    onSurfaceVariant = Neutral90, // Lighter text on dark variant
-    outline = Neutral90
+    surfaceVariant = Color(0xFF2A2D35), // Tinted dark variant
+    onSurfaceVariant = NeutralVariant90,
+    outline = Color(0xFF8E9099), // Better contrast outline for dark mode
+    outlineVariant = Color(0xFF44474F) // Subtle divider color
 )
 
 /**

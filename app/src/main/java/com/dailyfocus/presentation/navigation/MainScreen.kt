@@ -14,6 +14,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.dailyfocus.core.preferences.AppPreferences
+import com.dailyfocus.core.ui.theme.AnimationConstants
 import com.dailyfocus.presentation.goals.GoalsScreen
 import com.dailyfocus.presentation.habits.HabitDetailScreen
 import com.dailyfocus.presentation.habits.HabitsScreen
@@ -92,8 +93,10 @@ fun MainScreen(appPreferences: AppPreferences) {
             navController = navController,
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
-            enterTransition = { fadeIn() },
-            exitTransition = { fadeOut() }
+            enterTransition = { AnimationConstants.screenEnter },
+            exitTransition = { AnimationConstants.screenExit },
+            popEnterTransition = { AnimationConstants.screenPopEnter },
+            popExitTransition = { AnimationConstants.screenPopExit }
         ) {
             // ── Onboarding ──────────────────────────────────────────
             composable(Destinations.ONBOARDING) {
