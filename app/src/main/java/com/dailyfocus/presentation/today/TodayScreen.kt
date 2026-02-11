@@ -91,34 +91,45 @@ fun TodayScreen(
                             ),
                             modifier = Modifier.weight(1f)
                         )
-                        // Settings / Overflow Menu
-                        Box {
-                            var showMenu by remember { mutableStateOf(false) }
-                            IconButton(onClick = { showMenu = true }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Routines Button
+                            IconButton(onClick = onNavigateToRoutines) {
                                 Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More",
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Manage recurring tasks",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Settings") },
-                                    onClick = {
-                                        showMenu = false
-                                        onOpenSettings()
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("About") },
-                                    onClick = {
-                                        showMenu = false
-                                        onNavigateToAbout()
-                                    }
-                                )
+                            
+                            // Settings / Overflow Menu
+                            Box {
+                                var showMenu by remember { mutableStateOf(false) }
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = "More",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Settings") },
+                                        onClick = {
+                                            showMenu = false
+                                            onOpenSettings()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("About") },
+                                        onClick = {
+                                            showMenu = false
+                                            onNavigateToAbout()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
