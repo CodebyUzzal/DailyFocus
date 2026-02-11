@@ -26,5 +26,6 @@ object Destinations {
     const val ONBOARDING = "onboarding"
     const val ROUTINES = "routines"
     const val HABIT_DETAIL = "habit_detail/{habitId}"
+    const val HISTORY = "history"
     fun habitDetail(habitId: Long) = "habit_detail/$habitId"
 }

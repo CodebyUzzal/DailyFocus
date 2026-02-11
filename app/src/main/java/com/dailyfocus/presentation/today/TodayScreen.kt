@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +32,7 @@ import java.time.format.FormatStyle
 @Composable
 fun TodayScreen(
     onNavigateToRoutines: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: TodayViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,15 +89,23 @@ fun TodayScreen(
                             ),
                             modifier = Modifier.weight(1f)
                         )
-                        IconButton(
-                            onClick = onNavigateToRoutines,
-                            modifier = Modifier.padding(top = Spacing.l, end = Spacing.m)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Manage recurring tasks",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Row(modifier = Modifier.padding(top = Spacing.l, end = Spacing.m)) {
+                             // Routines Button
+                            IconButton(onClick = onNavigateToRoutines) {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                                    contentDescription = "Manage recurring tasks",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            // Settings Button
+                            IconButton(onClick = onOpenSettings) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

@@ -56,6 +56,15 @@ fun MainScreen(appPreferences: AppPreferences) {
         currentDestination?.hierarchy?.any { it.route == screen.route } == true
     }
 
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    if (showSettingsDialog) {
+        com.dailyfocus.core.ui.components.SettingsDialog(
+            onDismiss = { showSettingsDialog = false },
+            appPreferences = appPreferences
+        )
+    }
+
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
@@ -114,6 +123,9 @@ fun MainScreen(appPreferences: AppPreferences) {
                 TodayScreen(
                     onNavigateToRoutines = {
                         navController.navigate(Destinations.ROUTINES)
+                    },
+                    onOpenSettings = {
+                        showSettingsDialog = true
                     }
                 )
             }
@@ -151,7 +163,17 @@ fun MainScreen(appPreferences: AppPreferences) {
 
             // ── Log ─────────────────────────────────────────────────
             composable(Screen.Log.route) {
-                LogScreen()
+                LogScreen(
+                    onNavigateToHistory = {
+                        navController.navigate(Destinations.HISTORY)
+                    }
+                )
+            }
+
+            composable(Destinations.HISTORY) {
+                com.dailyfocus.presentation.history.HistoryScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

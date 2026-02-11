@@ -90,3 +90,57 @@ val DailyFocusTypography = Typography(
         letterSpacing = 0.5.sp // Caps usually need more spacing
     )
 )
+
+/**
+ * Returns a Typography instance with all font sizes and line heights multiplied by [scale].
+ */
+fun getScaledTypography(scale: Float): Typography {
+    if (scale == 1.0f) return DailyFocusTypography
+    
+    return Typography(
+        displayLarge = DailyFocusTypography.displayLarge.copy(
+            fontSize = DailyFocusTypography.displayLarge.fontSize * scale,
+            lineHeight = DailyFocusTypography.displayLarge.lineHeight * scale
+        ),
+        headlineLarge = DailyFocusTypography.headlineLarge.copy(
+            fontSize = DailyFocusTypography.headlineLarge.fontSize * scale,
+            lineHeight = DailyFocusTypography.headlineLarge.lineHeight * scale
+        ),
+        headlineMedium = DailyFocusTypography.headlineMedium.copy(
+            fontSize = DailyFocusTypography.headlineMedium.fontSize * scale,
+            lineHeight = DailyFocusTypography.headlineMedium.lineHeight * scale
+        ),
+        titleLarge = DailyFocusTypography.titleLarge.copy(
+            fontSize = DailyFocusTypography.titleLarge.fontSize * scale,
+            lineHeight = DailyFocusTypography.titleLarge.lineHeight * scale
+        ),
+        titleMedium = DailyFocusTypography.titleMedium.copy(
+            fontSize = DailyFocusTypography.titleMedium.fontSize * scale,
+            lineHeight = DailyFocusTypography.titleMedium.lineHeight * scale
+        ),
+        bodyLarge = DailyFocusTypography.bodyLarge.copy(
+            fontSize = DailyFocusTypography.bodyLarge.fontSize * scale,
+            lineHeight = DailyFocusTypography.bodyLarge.lineHeight * scale
+        ),
+        bodyMedium = DailyFocusTypography.bodyMedium.copy(
+            fontSize = DailyFocusTypography.bodyMedium.fontSize * scale,
+            lineHeight = DailyFocusTypography.bodyMedium.lineHeight * scale
+        ),
+        bodySmall = DailyFocusTypography.bodySmall.copy(
+            fontSize = DailyFocusTypography.bodySmall.fontSize * scale,
+            lineHeight = DailyFocusTypography.bodySmall.lineHeight * scale
+        ),
+        labelLarge = DailyFocusTypography.labelLarge.copy(
+            fontSize = DailyFocusTypography.labelLarge.fontSize * scale,
+            lineHeight = DailyFocusTypography.labelLarge.lineHeight * scale
+        ),
+        labelMedium = DailyFocusTypography.labelMedium.copy(
+            fontSize = DailyFocusTypography.labelMedium.fontSize * scale,
+            lineHeight = DailyFocusTypography.labelMedium.lineHeight * scale
+        ),
+        labelSmall = DailyFocusTypography.labelSmall.copy(
+            fontSize = DailyFocusTypography.labelSmall.fontSize * scale,
+            lineHeight = DailyFocusTypography.labelSmall.lineHeight * scale
+        )
+    )
+}

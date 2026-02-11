@@ -42,6 +42,11 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun getLogDatesForHabit(habitId: Long): List<LocalDate> =
         logDao.getLogDatesForHabit(habitId)
+
+    override fun getLogsByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Pair<Long, LocalDate>>> =
+        logDao.getByDateRange(startDate, endDate).map { logs ->
+            logs.map { it.habitId to it.date }
+        }
 }
 
 private fun HabitEntity.toDomain() = Habit(

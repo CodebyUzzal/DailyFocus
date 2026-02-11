@@ -70,6 +70,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun DailyFocusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    fontScale: Float = 1.0f,
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -88,7 +89,7 @@ fun DailyFocusTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = DailyFocusTypography,
+        typography = getScaledTypography(fontScale),
         content = content
     )
 }

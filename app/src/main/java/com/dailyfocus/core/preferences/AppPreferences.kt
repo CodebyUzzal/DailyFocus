@@ -34,9 +34,29 @@ class AppPreferences @Inject constructor(
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val USER_NAME = stringPreferencesKey("user_name")
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
+        val FONT_SCALE = androidx.datastore.preferences.core.floatPreferencesKey("font_scale")
     }
 
-    // ── Last Open Date ──────────────────────────────────────────────────
+    // ── Font Scale ──────────────────────────────────────────────────────
+
+    /** Observe the user's preferred font scale multiplier (0.85f to 1.3f). Default 1.0f. */
+    val fontScale: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[Keys.FONT_SCALE] ?: 1.0f
+    }
+
+    /** Set the font scale. Clamped between 0.85f and 1.30f. */
+    suspend fun setFontScale(scale: Float) {
+        val clamped = scale.coerceIn(0.85f, 1.30f)
+        context.dataStore.edit { prefs ->
+            prefs[Keys.FONT_SCALE] = clamped
+        }
+    }
+
+    companion object {
+        const val THEME_SYSTEM = "system"
+        const val THEME_LIGHT = "light"
+        const val THEME_DARK = "dark"
+    }
 
     /** Observe the last date the app was opened. */
     val lastOpenDate: Flow<LocalDate?> = context.dataStore.data.map { prefs ->
@@ -101,10 +121,6 @@ class AppPreferences @Inject constructor(
     val isOnboardingComplete: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.ONBOARDING_COMPLETE] ?: false
     }
-
-    companion object {
-        const val THEME_SYSTEM = "system"
-        const val THEME_LIGHT = "light"
-        const val THEME_DARK = "dark"
-    }
 }
+
+

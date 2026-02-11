@@ -24,10 +24,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyfocus.domain.model.DailyLogEntry
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import com.dailyfocus.presentation.navigation.Destinations
+import androidx.compose.material.icons.filled.List
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogScreen(
+    onNavigateToHistory: () -> Unit,
     viewModel: LogViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,12 +50,25 @@ fun LogScreen(
 
     DailyFocusScaffold(
         topBar = {
-             Box(modifier = Modifier.padding(top = Spacing.l, start = Spacing.m, bottom = Spacing.m)) {
+             Row(
+                 modifier = Modifier
+                     .fillMaxWidth()
+                     .padding(top = Spacing.l, start = Spacing.m, end = Spacing.m, bottom = Spacing.m),
+                 horizontalArrangement = Arrangement.SpaceBetween,
+                 verticalAlignment = Alignment.CenterVertically
+             ) {
                  Text(
                      text = "History", 
                      style = MaterialTheme.typography.headlineLarge,
                      color = MaterialTheme.colorScheme.primary
                  )
+                 IconButton(onClick = onNavigateToHistory) {
+                     Icon(
+                         imageVector = Icons.Default.List,
+                         contentDescription = "Full History",
+                         tint = MaterialTheme.colorScheme.onSurfaceVariant
+                     )
+                 }
              }
         },
         floatingActionButton = {

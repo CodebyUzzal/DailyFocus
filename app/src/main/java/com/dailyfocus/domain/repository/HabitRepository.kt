@@ -15,4 +15,5 @@ interface HabitRepository {
     suspend fun deleteLog(habitId: Long, date: LocalDate)
     suspend fun hasLogForDate(habitId: Long, date: LocalDate): Boolean
     suspend fun getLogDatesForHabit(habitId: Long): List<LocalDate>
+    fun getLogsByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Pair<Long, LocalDate>>>
 }
