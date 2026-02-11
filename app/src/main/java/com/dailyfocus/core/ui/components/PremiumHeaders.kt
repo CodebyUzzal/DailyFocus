@@ -46,10 +46,11 @@ fun GreetingHeader(
 
     AnimatedVisibility(
         visible = visible.value,
-        enter = fadeIn(animationSpec = AnimationConstants.normalTween())
+        enter = fadeIn(animationSpec = AnimationConstants.normalTween()),
+        modifier = modifier
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.m, vertical = Spacing.l)
         ) {

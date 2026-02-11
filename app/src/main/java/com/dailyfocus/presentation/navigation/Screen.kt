@@ -17,7 +17,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     data object Log : Screen("log", "Log", Icons.Default.Schedule)
 
     companion object {
-        val bottomNavItems = listOf(Today, Habits, Goals, Log)
+        val bottomNavItems get() = listOf(Today, Habits, Goals, Log)
     }
 }
 
