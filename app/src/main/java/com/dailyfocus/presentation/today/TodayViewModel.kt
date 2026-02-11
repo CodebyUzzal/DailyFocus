@@ -9,6 +9,7 @@ import com.dailyfocus.domain.model.TaskCategory
 import com.dailyfocus.domain.model.TodayTask
 import com.dailyfocus.domain.usecase.today.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,18 +34,7 @@ class TodayViewModel @Inject constructor(
 
     init {
         initializeDay()
-        observeCategoryFilter()
-        observeUserName()
         observeData()
-    }
-
-    /** Observe the user's display name from DataStore. */
-    private fun observeUserName() {
-        viewModelScope.launch {
-            preferences.userName.collect { name ->
-                _uiState.update { it.copy(userName = name ?: "") }
-            }
-        }
     }
 
     /** Run boundary check on init to generate recurring task instances. */
@@ -60,31 +50,46 @@ class TodayViewModel @Inject constructor(
         }
     }
 
-    /** Observe persisted category filter from DataStore. */
-    private fun observeCategoryFilter() {
+    /**
+     * Observes userName, categoryFilter, and todayTasks.
+     * Combines them cleanly to avoid race conditions and multiple subscriptions.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeData() {
+        // 1. Observe User Name
         viewModelScope.launch {
-            preferences.categoryFilter.collect { filter ->
-                val category = filter?.let {
-                    try { TaskCategory.valueOf(it) } catch (_: Exception) { null }
-                }
-                _uiState.update { it.copy(categoryFilter = category) }
-                observeData()
+            preferences.userName.collect { name ->
+                _uiState.update { it.copy(userName = name ?: "") }
             }
         }
-    }
 
-    /** Observe today tasks based on current filter. */
-    private fun observeData() {
+        // 2. Observe Filter & Tasks (chained)
         viewModelScope.launch {
-            getTodayTasks(today).collect { allTasks ->
-                val filter = _uiState.value.categoryFilter
-                val filtered = if (filter != null) {
-                    allTasks.filter { it.category == filter }
-                } else {
-                    allTasks
+            preferences.categoryFilter
+                .map { filterString ->
+                    val category = filterString?.let {
+                        try { TaskCategory.valueOf(it) } catch (_: Exception) { null }
+                    }
+                    _uiState.update { it.copy(categoryFilter = category) }
+                    category
                 }
-                _uiState.update { it.copy(todayTasks = filtered, isLoading = false) }
-            }
+                .flatMapLatest { filter ->
+                    getTodayTasks(today).map { allTasks ->
+                        if (filter != null) {
+                            allTasks.filter { it.category == filter }
+                        } else {
+                            allTasks
+                        }
+                    }
+                }
+                .catch { e ->
+                     _uiState.update {
+                        it.copy(userMessage = UiMessage.Snackbar("Error loading tasks: ${e.message}"))
+                    }
+                }
+                .collect { filteredTasks ->
+                    _uiState.update { it.copy(todayTasks = filteredTasks, isLoading = false) }
+                }
         }
     }
 

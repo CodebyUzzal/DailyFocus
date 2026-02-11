@@ -35,8 +35,9 @@ class Converters {
     fun fromTaskCategory(category: TaskCategory?): String? = category?.name
 
     @TypeConverter
-    fun toTaskCategory(value: String?): TaskCategory? =
-        value?.let { runCatching { TaskCategory.valueOf(it) }.getOrNull() }
+    fun toTaskCategory(value: String?): TaskCategory =
+        value?.let { runCatching { TaskCategory.valueOf(it) }.getOrDefault(TaskCategory.PERSONAL) }
+            ?: TaskCategory.PERSONAL
 
     // ── GoalType ────────────────────────────────────────────────────────
 
@@ -44,8 +45,9 @@ class Converters {
     fun fromGoalType(type: GoalType?): String? = type?.name
 
     @TypeConverter
-    fun toGoalType(value: String?): GoalType? =
-        value?.let { runCatching { GoalType.valueOf(it) }.getOrNull() }
+    fun toGoalType(value: String?): GoalType =
+        value?.let { runCatching { GoalType.valueOf(it) }.getOrDefault(GoalType.MONTHLY) }
+            ?: GoalType.MONTHLY
 
     // ── Set<DayOfWeek> ──────────────────────────────────────────────────
     // Stored as uppercase comma-separated string: "MONDAY,WEDNESDAY,FRIDAY"
