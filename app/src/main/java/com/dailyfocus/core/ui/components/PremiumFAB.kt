@@ -1,0 +1,49 @@
+package com.dailyfocus.core.ui.components
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import com.dailyfocus.core.ui.theme.AnimationConstants
+
+/**
+ * Premium FAB with subtle scale animation on press.
+ * Scale: 1.0 -> 1.05f (no large bounce)
+ */
+@Composable
+fun PremiumFAB(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    content: @Composable () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // Subtle scale up when pressed, instead of down, for a "tactile" feel or vice versa.
+    // User asked for "1.0 -> 1.05f".
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 1.05f else 1.0f,
+        animationSpec = AnimationConstants.fastTween(),
+        label = "fabScale"
+    )
+
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier.scale(scale),
+        containerColor = containerColor,
+        contentColor = contentColor,
+        interactionSource = interactionSource,
+        content = content
+    )
+}

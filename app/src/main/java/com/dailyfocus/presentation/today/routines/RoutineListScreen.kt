@@ -14,6 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dailyfocus.core.ui.components.DailyFocusCard
+import com.dailyfocus.core.ui.components.DailyFocusScaffold
+import com.dailyfocus.core.ui.components.EmptyState
+import com.dailyfocus.core.ui.components.PremiumExtendedFAB
+import com.dailyfocus.core.ui.theme.AppShapes
+import com.dailyfocus.core.ui.theme.Elevation
+import com.dailyfocus.core.ui.theme.Spacing
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyfocus.domain.model.Routine
@@ -37,40 +44,51 @@ fun RoutineListScreen(
         }
     }
 
-    Scaffold(
+    DailyFocusScaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Manage Routines") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                }
-            )
+             Box(modifier = Modifier.padding(top = Spacing.l, start = Spacing.m, bottom = Spacing.m)) {
+                 Row(verticalAlignment = Alignment.CenterVertically) {
+                     IconButton(onClick = onNavigateBack) {
+                         Icon(Icons.Default.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
+                     }
+                     Text(
+                         text = "Manage Routines", 
+                         style = MaterialTheme.typography.headlineMedium,
+                         color = MaterialTheme.colorScheme.primary
+                     )
+                 }
+             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, "Add Routine")
-            }
+            PremiumExtendedFAB(
+                onClick = { showAddDialog = true },
+                text = { Text("Add Routine") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (state.routines.isEmpty() && !state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+             Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No routines defined yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyState(
+                    message = "No routines yet.",
+                    subMessage = "Create a routine to simplify your day.",
+                    icon = Icons.Default.Edit
                 )
             }
         } else {
             LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(bottom = Spacing.maximize),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 items(state.routines, key = { it.id }) { routine ->
                     RoutineItemCard(
@@ -111,13 +129,16 @@ fun RoutineItemCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
+    DailyFocusCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.m),
+        elevation = Elevation.Level1
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -126,7 +147,7 @@ fun RoutineItemCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = routine.category.name,
+                    text = routine.category.name.lowercase().replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -136,7 +157,7 @@ fun RoutineItemCard(
                 onCheckedChange = { onToggleActive() }
             )
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, "Edit")
+                Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error)

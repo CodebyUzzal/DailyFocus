@@ -12,7 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
+import com.dailyfocus.core.ui.components.DailyFocusCard
+import com.dailyfocus.core.ui.components.PremiumCheckbox
+import com.dailyfocus.core.ui.theme.AnimationConstants
+import com.dailyfocus.core.ui.theme.AppShapes
+import com.dailyfocus.core.ui.theme.Elevation
+import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.domain.model.TaskItem
 import com.dailyfocus.domain.model.TodayTask
 import com.dailyfocus.presentation.today.TodayTaskWithItems
@@ -30,10 +37,10 @@ fun TodayTasksSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Today Tasks",
+            text = "Priorities", // Renamed to Priorities to match TodayScreen, or keep Today Tasks? Plan said "Priorities" in TodayScreen.
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            color = MaterialTheme.colorScheme.primary, // Using primary color for section header
+            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs)
         )
 
         if (tasks.isEmpty()) {
@@ -41,7 +48,7 @@ fun TodayTasksSection(
                 text = "No tasks for today. Tap + to add one.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xxs)
             )
         } else {
             tasks.forEach { taskWithItems ->
@@ -74,28 +81,38 @@ fun TodayTaskCard(
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         else
             MaterialTheme.colorScheme.onSurface,
-        label = "taskTextColor"
+        label = "taskTextColor",
+        animationSpec = AnimationConstants.fastTween()
     )
 
-    Card(
+    // Using basic Card or DailyFocusCard? 
+    // Plan says "DailyFocusCard (Using new Elevation/Shape tokens, no gradient spam)"
+    // The list items typically don't need heavy elevation to keep it "Clean".
+    // I'll use a surface-colored card with low elevation or just a column if I want a list look.
+    // The previous design was a Card. Let's upgrade to DailyFocusCard but with Level0 or Level1.
+    // Actually, distinct cards for tasks can look cluttered if there are many. 
+    // "DailyFocusCard" implies elevation. 
+    // Let's use DailyFocusCard but possibly Level0 for a flat look if desired, or Level1 for pop.
+    // Let's go with Level1 (subtle) as per plan.
+
+    DailyFocusCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+            .padding(horizontal = Spacing.m, vertical = Spacing.xxs),
+        elevation = Elevation.Level1,
+        shape = AppShapes.Medium
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.padding(Spacing.xs)) {
             // Parent task row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
+                PremiumCheckbox(
                     checked = task.isCompleted,
                     onCheckedChange = { onToggleTask() }
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.xs))
                 Text(
                     text = task.title,
                     style = MaterialTheme.typography.bodyLarge,
@@ -108,7 +125,8 @@ fun TodayTaskCard(
                         Icon(
                             imageVector = if (expanded) Icons.Default.ExpandLess
                             else Icons.Default.ExpandMore,
-                            contentDescription = "Toggle sub-items"
+                            contentDescription = "Toggle sub-items",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -123,7 +141,7 @@ fun TodayTaskCard(
 
             // Sub-items
             AnimatedVisibility(visible = expanded && items.isNotEmpty()) {
-                Column(modifier = Modifier.padding(start = 32.dp)) {
+                Column(modifier = Modifier.padding(start = Spacing.xl)) { // shift Indentation
                     items.forEach { item ->
                         SubTaskItemRow(item = item, onToggle = { onToggleItem(item) })
                     }
@@ -135,7 +153,7 @@ fun TodayTaskCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 32.dp, top = 4.dp),
+                        .padding(start = Spacing.xl, top = Spacing.xxs),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -144,9 +162,13 @@ fun TodayTaskCard(
                         placeholder = { Text("Sub-item title") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyMedium
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.xs))
                     TextButton(
                         onClick = {
                             if (newItemTitle.isNotBlank()) {
@@ -174,17 +196,20 @@ private fun SubTaskItemRow(
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         else
             MaterialTheme.colorScheme.onSurface,
-        label = "subItemTextColor"
+        label = "subItemTextColor",
+        animationSpec = AnimationConstants.fastTween()
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xxs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Checkbox(
+        PremiumCheckbox(
             checked = item.isCompleted,
-            onCheckedChange = { onToggle() }
+            onCheckedChange = { onToggle() },
+            modifier = Modifier.scale(0.8f) // Smaller checkbox for sub-items
         )
+        Spacer(modifier = Modifier.width(Spacing.xs))
         Text(
             text = item.title,
             style = MaterialTheme.typography.bodyMedium,

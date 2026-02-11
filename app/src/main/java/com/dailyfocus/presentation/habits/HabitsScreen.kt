@@ -6,8 +6,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import com.dailyfocus.core.ui.components.DailyFocusScaffold
+import com.dailyfocus.core.ui.components.EmptyState
+import com.dailyfocus.core.ui.components.PremiumExtendedFAB
+import com.dailyfocus.core.ui.theme.Spacing
+import com.dailyfocus.presentation.habits.components.HabitCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,40 +39,55 @@ fun HabitsScreen(
         }
     }
 
-    Scaffold(
+    DailyFocusScaffold(
         topBar = {
-            TopAppBar(title = { Text("Habits", style = MaterialTheme.typography.headlineMedium) })
+            // Using SectionHeader-like title or just standard large text at top of list
+             Box(modifier = Modifier.padding(top = Spacing.l, start = Spacing.m, bottom = Spacing.m)) {
+                 Text(
+                     text = "Habits", 
+                     style = MaterialTheme.typography.headlineLarge,
+                     color = MaterialTheme.colorScheme.primary
+                 )
+             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, "Add habit")
-            }
+            PremiumExtendedFAB(
+                onClick = { showAddDialog = true },
+                text = { Text("New Habit") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                containerColor = MaterialTheme.colorScheme.secondary, // Green/Teal for habits
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (state.habits.isEmpty() && !state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+             Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No habits yet.\nStart building consistency.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyState(
+                    message = "Start building a better version of yourself.",
+                    subMessage = "Add your first habit.",
+                    icon = Icons.Default.LocalFireDepartment
                 )
             }
         } else {
             LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(bottom = Spacing.maximize),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 items(state.habits, key = { it.habit.id }) { habitWithStreak ->
                     HabitCard(
                         habitWithStreak = habitWithStreak,
                         onToggleToday = { viewModel.onToggleToday(habitWithStreak.habit.id) },
                         onClick = { onNavigateToDetail(habitWithStreak.habit.id) },
-                        onDelete = { viewModel.onDeleteHabit(habitWithStreak.habit.id) }
+                        modifier = Modifier.padding(horizontal = Spacing.m)
                     )
                 }
             }
@@ -86,72 +105,7 @@ fun HabitsScreen(
     }
 }
 
-@Composable
-private fun HabitCard(
-    habitWithStreak: HabitWithStreak,
-    onToggleToday: () -> Unit,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = habitWithStreak.habit.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = if (habitWithStreak.currentStreak > 0)
-                                MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = "${habitWithStreak.currentStreak}",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                    Text(
-                        text = "Best: ${habitWithStreak.longestStreak}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
 
-            Checkbox(
-                checked = habitWithStreak.completedToday,
-                onCheckedChange = { onToggleToday() }
-            )
-
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun AddHabitDialog(

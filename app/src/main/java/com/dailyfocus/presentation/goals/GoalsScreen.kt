@@ -9,7 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Flag
+import com.dailyfocus.core.ui.components.DailyFocusScaffold
+import com.dailyfocus.core.ui.components.EmptyState
+import com.dailyfocus.core.ui.components.PremiumExtendedFAB
+import com.dailyfocus.core.ui.theme.Spacing
+import com.dailyfocus.presentation.goals.components.GoalCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,40 +43,55 @@ fun GoalsScreen(
         }
     }
 
-    Scaffold(
+    DailyFocusScaffold(
         topBar = {
-            TopAppBar(title = { Text("Goals", style = MaterialTheme.typography.headlineMedium) })
+             Box(modifier = Modifier.padding(top = Spacing.l, start = Spacing.m, bottom = Spacing.m)) {
+                 Text(
+                     text = "Goals", 
+                     style = MaterialTheme.typography.headlineLarge,
+                     color = MaterialTheme.colorScheme.primary
+                 )
+             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, "Add goal")
-            }
+            PremiumExtendedFAB(
+                onClick = { showAddDialog = true },
+                text = { Text("New Goal") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                containerColor = MaterialTheme.colorScheme.tertiary, // Different color for Goals
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (state.goals.isEmpty() && !state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+             Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "No goals yet.\nDefine what you're working toward.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyState(
+                    message = "Dream big. Start small.",
+                    subMessage = "Create your first goal.",
+                    icon = Icons.Default.Flag
                 )
             }
         } else {
             LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(bottom = Spacing.maximize),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l) // Wider spacing for goals
             ) {
                 items(state.goals, key = { it.goal.id }) { goalWithProgress ->
                     GoalCard(
                         goalWithProgress = goalWithProgress,
                         onToggleItem = { viewModel.onToggleGoalItem(it) },
                         onAddItem = { title -> viewModel.onAddGoalItem(goalWithProgress.goal.id, title) },
-                        onDeleteGoal = { viewModel.onDeleteGoal(goalWithProgress.goal.id) }
+                        onDeleteGoal = { viewModel.onDeleteGoal(goalWithProgress.goal.id) },
+                        modifier = Modifier.padding(horizontal = Spacing.m)
                     )
                 }
             }
@@ -89,144 +109,7 @@ fun GoalsScreen(
     }
 }
 
-@Composable
-private fun GoalCard(
-    goalWithProgress: GoalWithProgress,
-    onToggleItem: (GoalItem) -> Unit,
-    onAddItem: (String) -> Unit,
-    onDeleteGoal: () -> Unit
-) {
-    val goal = goalWithProgress.goal
-    var expanded by remember { mutableStateOf(true) }
-    var showAddItem by remember { mutableStateOf(false) }
-    var newItemTitle by remember { mutableStateOf("") }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = goal.title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 2.dp)
-                    ) {
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    goal.type.name.lowercase().replaceFirstChar { it.uppercase() },
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        )
-                        Text(
-                            text = "${goalWithProgress.completedCount}/${goalWithProgress.totalCount}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        "Toggle items"
-                    )
-                }
-                IconButton(onClick = onDeleteGoal) {
-                    Icon(
-                        Icons.Default.Delete,
-                        "Delete goal",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            // Progress bar
-            if (goalWithProgress.totalCount > 0) {
-                LinearProgressIndicator(
-                    progress = { goalWithProgress.progressPercent / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            }
-
-            // Items
-            AnimatedVisibility(visible = expanded) {
-                Column {
-                    goalWithProgress.items.forEach { item ->
-                        GoalItemRow(item = item, onToggle = { onToggleItem(item) })
-                    }
-
-                    // Add item inline
-                    if (showAddItem) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = newItemTitle,
-                                onValueChange = { newItemTitle = it },
-                                placeholder = { Text("New item") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                textStyle = MaterialTheme.typography.bodyMedium
-                            )
-                            TextButton(onClick = {
-                                if (newItemTitle.isNotBlank()) {
-                                    onAddItem(newItemTitle)
-                                    newItemTitle = ""
-                                    showAddItem = false
-                                }
-                            }) { Text("Add") }
-                        }
-                    } else {
-                        TextButton(onClick = { showAddItem = true }) {
-                            Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add item")
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GoalItemRow(item: GoalItem, onToggle: () -> Unit) {
-    val textColor by animateColorAsState(
-        targetValue = if (item.isCompleted)
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        else
-            MaterialTheme.colorScheme.onSurface,
-        label = "goalItemColor"
-    )
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(checked = item.isCompleted, onCheckedChange = { onToggle() })
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.bodyMedium,
-            color = textColor,
-            textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null
-        )
-    }
-}
 
 @Composable
 private fun AddGoalDialog(

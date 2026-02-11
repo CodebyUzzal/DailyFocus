@@ -14,11 +14,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.Check
+import com.dailyfocus.core.ui.components.DailyFocusScaffold
+import com.dailyfocus.core.ui.components.EmptyState
+import com.dailyfocus.core.ui.components.GreetingHeader
+import com.dailyfocus.core.ui.components.PremiumExtendedFAB
+import com.dailyfocus.core.ui.components.SectionHeader
+import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.presentation.today.components.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import com.dailyfocus.presentation.today.components.TodayTaskCard
-import androidx.compose.ui.Alignment
+
 
 /**
  * Main Today tab screen combining daily checklist, today tasks, and category filter.
@@ -42,41 +49,26 @@ fun TodayScreen(
         }
     }
 
-    Scaffold(
+    DailyFocusScaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Today",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Text(
-                            text = state.date.format(
-                                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToRoutines) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Manage recurring tasks"
-                        )
-                    }
-                }
-            )
+            // No standard TopAppBar, using GreetingHeader inside the scrollable content or fixed at top?
+            // Plan says "Hero Header (Greeting...)" implying it's part of the scroll or a custom top bar.
+            // "Top of Today screen" -> usually scrollable so it disappears when scrolling down?
+            // Or fixed? Reference apps usually scroll it.
+            // However, GreetingHeader is large.
+            // Let's hide the default TopAppBar and put GreetingHeader as the first item in lazy column.
+            // BUT we have a "Settings" action. We need to place that somewhere.
+            // Maybe a row with Greeting and Settings icon?
+            // Or a transparent TopAppBar overlay?
+            // Let's implement a custom top row in the scrollable content.
         },
         floatingActionButton = {
-            FloatingActionButton(
+            PremiumExtendedFAB(
                 onClick = { showAddDialog = true },
+                text = { Text("Add Task") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add task")
-            }
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -85,7 +77,7 @@ fun TodayScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                    contentAlignment = androidx.compose.ui.Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -94,9 +86,48 @@ fun TodayScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(bottom = Spacing.maximize), // Bottom padding for FAB
+                verticalArrangement = Arrangement.spacedBy(Spacing.l) // Wider spacing for premium feel
             ) {
+                // ── Header Section ───────────────────────────────────────────
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top // Align top to handle different heights
+                    ) {
+                        GreetingHeader(
+                            date = state.date.format(
+                                DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = onNavigateToRoutines,
+                            modifier = Modifier.padding(top = Spacing.l, end = Spacing.m)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Manage routines",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // ── Summary Card ─────────────────────────────────────────────
+                item {
+                    Box(modifier = Modifier.padding(horizontal = Spacing.m)) {
+                        // Calculate progress (just an example calculation)
+                        val totalTasks = state.dailyChecklist.size + state.todayTasks.size
+                        val completedTasks = state.dailyChecklist.count { it.isCompleted } + state.todayTasks.count { it.task.isCompleted }
+                        val progress = if (totalTasks > 0) completedTasks.toFloat() / totalTasks else 0f
+                        
+                        SummaryCard(completionPercentage = progress)
+                    }
+                }
+
+                // ── Filters ──────────────────────────────────────────────────
                 item {
                     CategoryFilterChips(
                         selectedCategory = state.categoryFilter,
@@ -104,17 +135,12 @@ fun TodayScreen(
                     )
                 }
 
-                item {
-                    HorizontalDivider()
-                }
-
                 // ── Routines Section ─────────────────────────────────────────
                 if (state.dailyChecklist.isNotEmpty()) {
                     item {
-                        Text(
-                            text = "Today's Routines",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
+                        SectionHeader(
+                            title = "Daily Routines",
+                            modifier = Modifier.padding(horizontal = Spacing.m)
                         )
                     }
                     items(state.dailyChecklist, key = { "routine_${it.id}" }) { instance ->
@@ -129,9 +155,9 @@ fun TodayScreen(
                 // ── One-off Tasks Section ────────────────────────────────────
                 if (state.todayTasks.isNotEmpty()) {
                     item {
-                        Text(
-                            text = "Today Tasks",
-                            style = MaterialTheme.typography.titleMedium,
+                        SectionHeader(
+                            title = "Priorities",
+                            modifier = Modifier.padding(horizontal = Spacing.m),
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }
@@ -143,25 +169,19 @@ fun TodayScreen(
                             onAddSubItem = viewModel::onAddTaskItem
                         )
                     }
-                }
-                
-                if (state.dailyChecklist.isEmpty() && state.todayTasks.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillParentMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "All done for today!",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                } else if (state.dailyChecklist.isEmpty()) {
+                    // Empty State if BOTH are empty
+                     item {
+                        EmptyState(
+                            message = "You're all set for today.",
+                            subMessage = "Take a breath or add a new task.",
+                            icon = Icons.Default.Check
+                        )
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(80.dp)) // FAB clearance
+                 item {
+                    Spacer(modifier = Modifier.height(Spacing.maximize)) // Fab clearance
                 }
             }
         }

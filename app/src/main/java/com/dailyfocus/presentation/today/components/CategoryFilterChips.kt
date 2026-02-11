@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.domain.model.TaskCategory
 
+import com.dailyfocus.core.ui.theme.Spacing
+
 /**
  * Horizontally scrollable filter chips for Personal / Office categories.
  * Null selection means "show all."
@@ -20,8 +22,8 @@ fun CategoryFilterChips(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = Spacing.m, vertical = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
     ) {
         FilterChip(
             selected = selectedCategory == null,

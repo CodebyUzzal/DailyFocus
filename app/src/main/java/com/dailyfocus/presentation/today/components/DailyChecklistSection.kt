@@ -11,6 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.dailyfocus.core.ui.components.DailyFocusCard
+import com.dailyfocus.core.ui.components.PremiumCheckbox
+import com.dailyfocus.core.ui.theme.AnimationConstants
+import com.dailyfocus.core.ui.theme.AppShapes
+import com.dailyfocus.core.ui.theme.Elevation
+import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.domain.model.DailyTaskInstance
 
 /**
@@ -60,31 +66,37 @@ fun DailyTaskItem(
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
         else
             MaterialTheme.colorScheme.onSurface,
-        label = "checklistTextColor"
+        label = "checklistTextColor",
+        animationSpec = AnimationConstants.fastTween()
     )
 
-    Row(
+    DailyFocusCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = Spacing.m, vertical = Spacing.xxs),
+        elevation = Elevation.Level1,
+        shape = AppShapes.Medium,
+        onClick = onToggle // Make whole card clickable for checklist
     ) {
-        Checkbox(
-            checked = isCompleted,
-            onCheckedChange = { onToggle() }
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = textColor,
-                textDecoration = if (isCompleted) TextDecoration.LineThrough else null
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.m), // Inner padding
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PremiumCheckbox(
+                checked = isCompleted,
+                onCheckedChange = { onToggle() }
             )
-            // Category removed from signature to simplify usage, or can retain if needed. 
-            // TodayScreen passes title and isCompleted. 
-            // But checking DailyChecklistItem it used `instance`.
-            // I will simplify it to match TodayScreen usage.
+            Spacer(modifier = Modifier.width(Spacing.m))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor,
+                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null
+                )
+            }
         }
     }
 }

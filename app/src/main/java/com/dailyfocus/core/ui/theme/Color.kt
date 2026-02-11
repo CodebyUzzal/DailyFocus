@@ -2,36 +2,42 @@ package com.dailyfocus.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/** Brand primary – Indigo 500 */
-val Primary = Color(0xFF3F51B5)
-val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFFDBE1FF)
-val OnPrimaryContainer = Color(0xFF00164D)
+// Primary - Deep Indigo
+val Primary80 = Color(0xFFBAC3FF)
+val Primary40 = Color(0xFF3F51B5)
+val Primary30 = Color(0xFF283896)
 
-/** Brand accent – Teal 400 */
-val Accent = Color(0xFF26A69A)
-val OnAccent = Color(0xFFFFFFFF)
-val AccentContainer = Color(0xFFA7F0E8)
-val OnAccentContainer = Color(0xFF00201C)
+// Secondary - Teal
+val Secondary80 = Color(0xFF8CF3E6)
+val Secondary40 = Color(0xFF006A61)
 
-/** Neutral surfaces */
-val SurfaceLight = Color(0xFFFBF8FF)
-val OnSurfaceLight = Color(0xFF1B1B21)
-val SurfaceVariantLight = Color(0xFFE3E1EC)
-val OnSurfaceVariantLight = Color(0xFF46464F)
+// Tertiary - Warm accent (e.g., for habits/streaks)
+val Tertiary80 = Color(0xFFFFB690)
+val Tertiary40 = Color(0xFF8D4F2B)
 
-val SurfaceDark = Color(0xFF131318)
-val OnSurfaceDark = Color(0xFFE4E1E9)
-val SurfaceVariantDark = Color(0xFF46464F)
-val OnSurfaceVariantDark = Color(0xFFC7C5D0)
+// Neutral / Surface
+val Neutral99 = Color(0xFFFDFCFF)
+val Neutral95 = Color(0xFFEFF0F7)
+val Neutral90 = Color(0xFFE0E2EC)
+val Neutral10 = Color(0xFF191C22)
+val NeutralVariant90 = Color(0xFFE3E1EC)
+val NeutralVariant30 = Color(0xFF46464F)
 
-/** Status colors */
-val Success = Color(0xFF4CAF50)
-val Warning = Color(0xFFFFA726)
-val Error = Color(0xFFEF5350)
+// Semantic Colors
+val Error80 = Color(0xFFFFB4AB)
+val Error40 = Color(0xFFBA1A1A)
 
-/** Streak / heatmap gradations */
-val HeatmapEmpty = Color(0xFFE0E0E0)
-val HeatmapDone = Color(0xFF26A69A)
-val HeatmapMissed = Color(0xFFEF9A9A)
-val HeatmapToday = Color(0xFF3F51B5)
+// Gradients (Restrained use only)
+val GradientHeaderStart = Color(0xFF3F51B5)
+val GradientHeaderEnd = Color(0xFF5C6BC0)
+
+val GradientSummaryStart = Color(0xFF26A69A)
+val GradientSummaryEnd = Color(0xFF4DB6AC)
+
+// Habit Streaks
+val StreakCool = Color(0xFFE0E0E0)
+val StreakHot = Color(0xFFFF7043)
+val HeatmapToday = Color(0xFFFFB690)
+val HeatmapDone = Color(0xFF26A69A) // Teal
+val HeatmapMissed = Color(0xFFFFB4AB) // Soft Red
+val HeatmapEmpty = Color(0xFFE0E0E0) // Light Grey
