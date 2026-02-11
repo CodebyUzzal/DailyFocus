@@ -24,16 +24,14 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "dailyfocus.db"
+            "dailyfocus_database.db"
         )
-        .addMigrations(AppDatabase.MIGRATION_1_2)
+        .fallbackToDestructiveMigration()
         .build()
     }
 
-    @Provides fun provideRoutineDao(db: AppDatabase): RoutineDao = db.routineDao()
-    @Provides fun provideDailyTaskInstanceDao(db: AppDatabase): DailyTaskInstanceDao = db.dailyTaskInstanceDao()
+    @Provides fun provideRecurringTaskDao(db: AppDatabase): RecurringTaskDao = db.recurringTaskDao()
     @Provides fun provideTodayTaskDao(db: AppDatabase): TodayTaskDao = db.todayTaskDao()
-    @Provides fun provideTaskItemDao(db: AppDatabase): TaskItemDao = db.taskItemDao()
     @Provides fun provideHabitDao(db: AppDatabase): HabitDao = db.habitDao()
     @Provides fun provideHabitLogDao(db: AppDatabase): HabitLogDao = db.habitLogDao()
     @Provides fun provideGoalDao(db: AppDatabase): GoalDao = db.goalDao()

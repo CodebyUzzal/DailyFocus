@@ -3,23 +3,26 @@ package com.dailyfocus.presentation.today.routines
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailyfocus.core.util.UiMessage
-import com.dailyfocus.domain.model.Routine
+import com.dailyfocus.domain.model.RecurringTask
 import com.dailyfocus.domain.model.TaskCategory
-import com.dailyfocus.domain.usecase.today.ManageRoutinesUseCase
+import com.dailyfocus.domain.usecase.today.GenerateRecurringTasksUseCase
+import com.dailyfocus.domain.usecase.today.ManageRecurringTasksUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import javax.inject.Inject
 
 data class RoutineUiState(
-    val routines: List<Routine> = emptyList(),
+    val routines: List<RecurringTask> = emptyList(),
     val isLoading: Boolean = true,
     val userMessage: UiMessage? = null
 )
 
 @HiltViewModel
 class RoutineViewModel @Inject constructor(
-    private val manageRoutines: ManageRoutinesUseCase
+    private val manageRecurringTasks: ManageRecurringTasksUseCase,
+    private val generateRecurringTasks: GenerateRecurringTasksUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoutineUiState())
@@ -27,23 +30,19 @@ class RoutineViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            manageRoutines.getAll().collect { routines ->
-                _uiState.update { it.copy(routines = routines, isLoading = false) }
+            manageRecurringTasks.getAll().collect { tasks ->
+                _uiState.update { it.copy(routines = tasks, isLoading = false) }
             }
         }
     }
 
-    fun onAddRoutine(title: String, category: TaskCategory) {
+    fun onAddRoutine(title: String, category: TaskCategory, daysOfWeek: Set<DayOfWeek> = emptySet()) {
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                manageRoutines.addRoutine(
-                    Routine(
-                        title = title.trim(),
-                        category = category,
-                        position = _uiState.value.routines.size
-                    )
-                )
+                manageRecurringTasks.add(title.trim(), category, daysOfWeek)
+                // Also generate today's task if applicable
+                generateRecurringTasks()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to add: ${e.message}"))
@@ -52,10 +51,10 @@ class RoutineViewModel @Inject constructor(
         }
     }
 
-    fun onUpdateRoutine(routine: Routine) {
+    fun onUpdateRoutine(task: RecurringTask) {
         viewModelScope.launch {
             try {
-                manageRoutines.updateRoutine(routine)
+                manageRecurringTasks.update(task)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
@@ -67,7 +66,7 @@ class RoutineViewModel @Inject constructor(
     fun onDeleteRoutine(id: Long) {
         viewModelScope.launch {
             try {
-                manageRoutines.deleteRoutine(id)
+                manageRecurringTasks.delete(id)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to delete: ${e.message}"))
@@ -76,8 +75,16 @@ class RoutineViewModel @Inject constructor(
         }
     }
 
-    fun onToggleActive(routine: Routine) {
-        onUpdateRoutine(routine.copy(isActive = !routine.isActive))
+    fun onToggleActive(task: RecurringTask) {
+        viewModelScope.launch {
+            try {
+                manageRecurringTasks.toggleActive(task)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(userMessage = UiMessage.Snackbar("Failed: ${e.message}"))
+                }
+            }
+        }
     }
 
     fun onMessageDismissed() {

@@ -1,28 +1,37 @@
 package com.dailyfocus.domain.usecase.today
 
-import com.dailyfocus.domain.model.Routine
-import com.dailyfocus.domain.repository.RoutineRepository
+import com.dailyfocus.domain.model.RecurringTask
+import com.dailyfocus.domain.model.TaskCategory
+import com.dailyfocus.domain.repository.RecurringTaskRepository
+import kotlinx.coroutines.flow.Flow
+import java.time.DayOfWeek
 import javax.inject.Inject
 
 /**
- * CRUD operations for Routines (formerly Recurring Tasks).
+ * CRUD operations for recurring task definitions.
  */
-class ManageRoutinesUseCase @Inject constructor(
-    private val repository: RoutineRepository
+class ManageRecurringTasksUseCase @Inject constructor(
+    private val repository: RecurringTaskRepository
 ) {
-    suspend fun addRoutine(routine: Routine): Long {
-        return repository.insert(routine)
+    fun getAll(): Flow<List<RecurringTask>> = repository.getAll()
+    fun getAllActive(): Flow<List<RecurringTask>> = repository.getAllActive()
+
+    suspend fun add(
+        title: String,
+        category: TaskCategory,
+        daysOfWeek: Set<DayOfWeek> = emptySet()
+    ): Long {
+        return repository.insert(
+            RecurringTask(
+                title = title,
+                category = category,
+                daysOfWeek = daysOfWeek
+            )
+        )
     }
 
-    suspend fun updateRoutine(routine: Routine) {
-        repository.update(routine)
-    }
-
-    suspend fun deleteRoutine(id: Long) {
-        repository.delete(id)
-    }
-
-    fun getAll(): kotlinx.coroutines.flow.Flow<List<Routine>> {
-        return repository.getAll()
-    }
+    suspend fun update(task: RecurringTask) = repository.update(task)
+    suspend fun delete(id: Long) = repository.delete(id)
+    suspend fun toggleActive(task: RecurringTask) =
+        repository.update(task.copy(isActive = !task.isActive))
 }

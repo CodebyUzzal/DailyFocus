@@ -17,32 +17,17 @@ import javax.inject.Singleton
 abstract class RepositoryModule {
 
     @Binds @Singleton
-    abstract fun bindRoutineRepository(
-        impl: RoutineRepositoryImpl
-    ): RoutineRepository
+    abstract fun bindRecurringTaskRepository(impl: RecurringTaskRepositoryImpl): RecurringTaskRepository
 
     @Binds @Singleton
-    abstract fun bindDailyTaskInstanceRepository(
-        impl: DailyTaskInstanceRepositoryImpl
-    ): DailyTaskInstanceRepository
+    abstract fun bindTodayTaskRepository(impl: TodayTaskRepositoryImpl): TodayTaskRepository
 
     @Binds @Singleton
-    abstract fun bindTodayTaskRepository(
-        impl: TodayTaskRepositoryImpl
-    ): TodayTaskRepository
+    abstract fun bindHabitRepository(impl: HabitRepositoryImpl): HabitRepository
 
     @Binds @Singleton
-    abstract fun bindHabitRepository(
-        impl: HabitRepositoryImpl
-    ): HabitRepository
+    abstract fun bindGoalRepository(impl: GoalRepositoryImpl): GoalRepository
 
     @Binds @Singleton
-    abstract fun bindGoalRepository(
-        impl: GoalRepositoryImpl
-    ): GoalRepository
-
-    @Binds @Singleton
-    abstract fun bindDailyLogRepository(
-        impl: DailyLogRepositoryImpl
-    ): DailyLogRepository
+    abstract fun bindDailyLogRepository(impl: DailyLogRepositoryImpl): DailyLogRepository
 }

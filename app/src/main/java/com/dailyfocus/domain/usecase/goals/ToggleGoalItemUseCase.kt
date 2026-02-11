@@ -2,7 +2,6 @@ package com.dailyfocus.domain.usecase.goals
 
 import com.dailyfocus.domain.model.GoalItem
 import com.dailyfocus.domain.repository.GoalRepository
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
@@ -13,10 +12,7 @@ class ToggleGoalItemUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(item: GoalItem) {
         repository.updateGoalItem(
-            item.copy(
-                isCompleted = !item.isCompleted,
-                updatedAt = LocalDateTime.now()
-            )
+            item.copy(isCompleted = !item.isCompleted)
         )
     }
 }

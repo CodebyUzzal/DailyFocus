@@ -6,7 +6,6 @@ import com.dailyfocus.core.preferences.AppPreferences
 import com.dailyfocus.core.util.DateUtils
 import com.dailyfocus.core.util.UiMessage
 import com.dailyfocus.domain.model.TaskCategory
-import com.dailyfocus.domain.model.TaskItem
 import com.dailyfocus.domain.model.TodayTask
 import com.dailyfocus.domain.usecase.today.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,21 +15,14 @@ import javax.inject.Inject
 
 /**
  * ViewModel for the Today tab.
- * Orchestrates daily checklist (recurring instances), one-time tasks,
- * category filtering, and day-boundary management.
+ * Uses only use cases — no repository access (clean architecture).
  */
 @HiltViewModel
 class TodayViewModel @Inject constructor(
     private val dailyBoundaryManager: DailyBoundaryManager,
-    private val getRecurringInstances: GetTodayRecurringInstancesUseCase,
-    private val toggleRecurringInstance: ToggleRecurringInstanceUseCase,
-    private val updateRoutineStreak: UpdateRoutineStreakUseCase,
     private val getTodayTasks: GetTodayTasksUseCase,
     private val addTodayTask: AddTodayTaskUseCase,
     private val toggleTodayTask: ToggleTodayTaskUseCase,
-    private val toggleTaskItem: ToggleTaskItemUseCase,
-    private val getTaskItemsByParent: GetTaskItemsByParentUseCase,
-    private val addTaskItem: AddTaskItemUseCase,
     private val preferences: AppPreferences
 ) : ViewModel() {
 
@@ -55,7 +47,7 @@ class TodayViewModel @Inject constructor(
         }
     }
 
-    /** Run boundary check on init to generate missing instances. */
+    /** Run boundary check on init to generate recurring task instances. */
     private fun initializeDay() {
         viewModelScope.launch {
             try {
@@ -76,70 +68,32 @@ class TodayViewModel @Inject constructor(
                     try { TaskCategory.valueOf(it) } catch (_: Exception) { null }
                 }
                 _uiState.update { it.copy(categoryFilter = category) }
-                // Re-observe data with new filter
                 observeData()
             }
         }
     }
 
-    /** Observe recurring instances and today tasks based on current filter. */
+    /** Observe today tasks based on current filter. */
     private fun observeData() {
-        val filter = _uiState.value.categoryFilter
-
         viewModelScope.launch {
-            getRecurringInstances(today, filter).collect { instances ->
-                _uiState.update { it.copy(dailyChecklist = instances, isLoading = false) }
-            }
-        }
-
-        viewModelScope.launch {
-            getTodayTasks(today, filter).collect { tasks ->
-                val tasksWithItems = tasks.map { task ->
-                    val items = getTaskItemsByParent(task.id)
-                    TodayTaskWithItems(task = task, items = items)
+            getTodayTasks(today).collect { allTasks ->
+                val filter = _uiState.value.categoryFilter
+                val filtered = if (filter != null) {
+                    allTasks.filter { it.category == filter }
+                } else {
+                    allTasks
                 }
-                _uiState.update { it.copy(todayTasks = tasksWithItems, isLoading = false) }
+                _uiState.update { it.copy(todayTasks = filtered, isLoading = false) }
             }
         }
     }
 
     // ── User Actions ────────────────────────────────────────────────────
 
-    fun onToggleRecurringInstance(instanceId: Long, isCompleted: Boolean) {
-        viewModelScope.launch {
-            try {
-                toggleRecurringInstance(instanceId, !isCompleted)
-                
-                // Update streak if completing
-                val instance = _uiState.value.dailyChecklist.find { it.id == instanceId }
-                if (instance != null && !isCompleted) { // !isCompleted means we are setting it to true
-                    // We need the routineId. DailyTaskInstance has recurringTaskId.
-                    updateRoutineStreak(instance.recurringTaskId, today, true)
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
-                }
-            }
-        }
-    }
-
     fun onToggleTodayTask(task: TodayTask) {
         viewModelScope.launch {
             try {
-                toggleTodayTask.toggle(task)
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
-                }
-            }
-        }
-    }
-
-    fun onToggleTaskItem(item: TaskItem, parentTask: TodayTask) {
-        viewModelScope.launch {
-            try {
-                toggleTaskItem(item, parentTask)
+                toggleTodayTask(task)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
@@ -152,31 +106,10 @@ class TodayViewModel @Inject constructor(
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                addTodayTask(
-                    TodayTask(
-                        title = title.trim(),
-                        category = category,
-                        date = today
-                    )
-                )
+                addTodayTask(title.trim(), category, today)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to add task: ${e.message}"))
-                }
-            }
-        }
-    }
-
-    fun onAddTaskItem(parentTaskId: Long, title: String) {
-        if (title.isBlank()) return
-        viewModelScope.launch {
-            try {
-                addTaskItem(
-                    TaskItem(parentTaskId = parentTaskId, title = title.trim())
-                )
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(userMessage = UiMessage.Snackbar("Failed to add sub-item: ${e.message}"))
                 }
             }
         }

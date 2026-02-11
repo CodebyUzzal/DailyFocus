@@ -23,7 +23,5 @@ data class GoalItemEntity(
     val goalId: Long,
     val title: String,
     val isCompleted: Boolean = false,
-    val position: Int = 0,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

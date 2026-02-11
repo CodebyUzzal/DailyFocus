@@ -2,8 +2,6 @@ package com.dailyfocus.presentation.today.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,48 +15,18 @@ import com.dailyfocus.core.ui.theme.AnimationConstants
 import com.dailyfocus.core.ui.theme.AppShapes
 import com.dailyfocus.core.ui.theme.Elevation
 import com.dailyfocus.core.ui.theme.Spacing
-import com.dailyfocus.domain.model.DailyTaskInstance
+import com.dailyfocus.domain.model.TaskCategory
 
 /**
- * Section showing today's recurring task instances with checkboxes.
+ * Individual task item used in the Today screen.
+ * Unified component for both recurring and manual tasks.
  */
-@Composable
-fun DailyChecklistSection(
-    instances: List<DailyTaskInstance>,
-    onToggle: (Long, Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Daily Checklist",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        if (instances.isEmpty()) {
-            Text(
-                text = "No recurring tasks yet. Add some from the management screen.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-        } else {
-            instances.forEach { instance ->
-                DailyTaskItem(
-                    title = instance.title,
-                    isCompleted = instance.isCompleted,
-                    onToggle = { onToggle(instance.id, instance.isCompleted) }
-                )
-            }
-        }
-    }
-}
-
 @Composable
 fun DailyTaskItem(
     title: String,
     isCompleted: Boolean,
+    category: TaskCategory = TaskCategory.PERSONAL,
+    isRecurring: Boolean = false,
     onToggle: () -> Unit
 ) {
     val textColor by animateColorAsState(
@@ -76,12 +44,12 @@ fun DailyTaskItem(
             .padding(horizontal = Spacing.m, vertical = Spacing.xxs),
         elevation = Elevation.Level1,
         shape = AppShapes.Medium,
-        onClick = onToggle // Make whole card clickable for checklist
+        onClick = onToggle
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.m), // Inner padding
+                .padding(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
             PremiumCheckbox(
@@ -96,6 +64,23 @@ fun DailyTaskItem(
                     color = textColor,
                     textDecoration = if (isCompleted) TextDecoration.LineThrough else null
                 )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 2.dp)
+                ) {
+                    Text(
+                        text = category.name.lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (isRecurring) {
+                        Text(
+                            text = "• Recurring",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
             }
         }
     }

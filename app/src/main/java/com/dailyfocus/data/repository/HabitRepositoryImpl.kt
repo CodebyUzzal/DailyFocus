@@ -5,7 +5,6 @@ import com.dailyfocus.data.local.dao.HabitLogDao
 import com.dailyfocus.data.local.entity.HabitEntity
 import com.dailyfocus.data.local.entity.HabitLogEntity
 import com.dailyfocus.domain.model.Habit
-import com.dailyfocus.domain.model.HabitLog
 import com.dailyfocus.domain.repository.HabitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -32,31 +31,27 @@ class HabitRepositoryImpl @Inject constructor(
     override suspend fun deleteHabit(id: Long) =
         habitDao.delete(id)
 
-    override fun getLogsForHabit(habitId: Long): Flow<List<HabitLog>> =
-        logDao.getByHabit(habitId).map { list -> list.map { it.toDomain() } }
-
-    override suspend fun getLogDatesForHabit(habitId: Long): List<LocalDate> =
-        logDao.getLogDatesForHabit(habitId)
-
-    override suspend fun insertLog(log: HabitLog) =
-        logDao.insert(log.toEntity())
+    override suspend fun insertLog(habitId: Long, date: LocalDate) =
+        logDao.insert(HabitLogEntity(habitId = habitId, date = date))
 
     override suspend fun deleteLog(habitId: Long, date: LocalDate) =
         logDao.delete(habitId, date)
 
     override suspend fun hasLogForDate(habitId: Long, date: LocalDate): Boolean =
         logDao.hasLogForDate(habitId, date)
+
+    override suspend fun getLogDatesForHabit(habitId: Long): List<LocalDate> =
+        logDao.getLogDatesForHabit(habitId)
 }
 
 private fun HabitEntity.toDomain() = Habit(
-    id = id, name = name, frequency = frequency,
-    isActive = isActive, createdAt = createdAt, updatedAt = updatedAt
+    id = id, title = title, category = category,
+    currentStreak = currentStreak, longestStreak = longestStreak,
+    lastCompletedDate = lastCompletedDate, createdAt = createdAt
 )
 
 private fun Habit.toEntity() = HabitEntity(
-    id = id, name = name, frequency = frequency,
-    isActive = isActive, createdAt = createdAt, updatedAt = updatedAt
+    id = id, title = title, category = category,
+    currentStreak = currentStreak, longestStreak = longestStreak,
+    lastCompletedDate = lastCompletedDate, createdAt = createdAt
 )
-
-private fun HabitLogEntity.toDomain() = HabitLog(id = id, habitId = habitId, date = date)
-private fun HabitLog.toEntity() = HabitLogEntity(id = id, habitId = habitId, date = date)

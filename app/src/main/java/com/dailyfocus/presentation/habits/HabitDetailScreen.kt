@@ -18,18 +18,14 @@ import com.dailyfocus.presentation.habits.components.CalendarHeatmap
 fun HabitDetailScreen(
     habitId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: HabitsViewModel = hiltViewModel()
+    viewModel: HabitDetailViewModel = hiltViewModel()
 ) {
-    val detailState by viewModel.detailState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(habitId) {
-        viewModel.loadHabitDetail(habitId)
-    }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(detailState.habit?.habit?.name ?: "Habit Detail") },
+                title = { Text(state.habit?.habit?.title ?: "Habit Detail") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -38,7 +34,7 @@ fun HabitDetailScreen(
             )
         }
     ) { padding ->
-        if (detailState.isLoading) {
+        if (state.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
@@ -52,7 +48,7 @@ fun HabitDetailScreen(
                     .padding(padding)
                     .padding(16.dp)
             ) {
-                detailState.habit?.let { habitWithStreak ->
+                state.habit?.let { habitWithStreak ->
                     // Streak cards
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -73,7 +69,7 @@ fun HabitDetailScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Calendar heatmap
-                    CalendarHeatmap(days = detailState.calendarDays)
+                    CalendarHeatmap(completedDates = state.completedDates)
                 }
             }
         }

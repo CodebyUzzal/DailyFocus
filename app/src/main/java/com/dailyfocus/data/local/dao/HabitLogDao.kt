@@ -22,4 +22,7 @@ interface HabitLogDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM habit_logs WHERE habitId = :habitId AND date = :date)")
     suspend fun hasLogForDate(habitId: Long, date: LocalDate): Boolean
+
+    @Query("SELECT * FROM habit_logs WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<HabitLogEntity>>
 }

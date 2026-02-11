@@ -3,23 +3,24 @@ package com.dailyfocus.presentation.today.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.domain.model.TaskCategory
 
 /**
- * Bottom sheet dialog for adding a new one-time task to today.
+ * Bottom sheet dialog for adding a new task to today.
+ * [defaultCategory] fixes the category bug — defaults to the active tab's category.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
     onConfirm: (title: String, category: TaskCategory) -> Unit,
+    defaultCategory: TaskCategory = TaskCategory.PERSONAL,
     dialogTitle: String = "Add Task"
 ) {
     var title by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(TaskCategory.PERSONAL) }
+    var selectedCategory by remember { mutableStateOf(defaultCategory) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss

@@ -2,7 +2,6 @@ package com.dailyfocus.domain.usecase.log
 
 import com.dailyfocus.domain.model.DailyLogEntry
 import com.dailyfocus.domain.repository.DailyLogRepository
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
@@ -15,7 +14,7 @@ class AddEditDailyLogUseCase @Inject constructor(
         if (entry.id == 0L) {
             repository.insert(entry)
         } else {
-            repository.update(entry.copy(updatedAt = LocalDateTime.now()))
+            repository.update(entry)
         }
     }
 }

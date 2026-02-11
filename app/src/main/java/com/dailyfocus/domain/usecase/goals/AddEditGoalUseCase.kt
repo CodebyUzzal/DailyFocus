@@ -2,30 +2,35 @@ package com.dailyfocus.domain.usecase.goals
 
 import com.dailyfocus.domain.model.Goal
 import com.dailyfocus.domain.model.GoalItem
+import com.dailyfocus.domain.model.GoalType
 import com.dailyfocus.domain.repository.GoalRepository
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
- * Add or update a [Goal] and optionally manage its [GoalItem]s.
+ * Creates or updates a goal, and can also add items (milestones) to a goal.
  */
 class AddEditGoalUseCase @Inject constructor(
     private val repository: GoalRepository
 ) {
-    /** Creates a new goal and returns its ID. */
-    suspend fun addGoal(goal: Goal): Long = repository.insertGoal(goal)
-
-    /** Updates an existing goal. */
-    suspend fun updateGoal(goal: Goal) {
-        repository.updateGoal(goal.copy(updatedAt = LocalDateTime.now()))
+    suspend fun addGoal(title: String, type: GoalType = GoalType.INFINITE): Long {
+        return repository.insertGoal(Goal(title = title, type = type))
     }
 
-    /** Deletes a goal and its items (cascade handled by Room FK). */
-    suspend fun deleteGoal(id: Long) = repository.deleteGoal(id)
+    suspend fun updateGoal(goal: Goal) {
+        repository.updateGoal(goal)
+    }
 
-    /** Adds a new item to a goal. */
-    suspend fun addGoalItem(item: GoalItem): Long = repository.insertGoalItem(item)
+    suspend fun deleteGoal(id: Long) {
+        repository.deleteGoal(id)
+    }
 
-    /** Removes an item from a goal. */
-    suspend fun deleteGoalItem(id: Long) = repository.deleteGoalItem(id)
+    suspend fun addItem(goalId: Long, title: String): Long {
+        return repository.insertGoalItem(
+            GoalItem(goalId = goalId, title = title)
+        )
+    }
+
+    suspend fun deleteItem(id: Long) {
+        repository.deleteGoalItem(id)
+    }
 }

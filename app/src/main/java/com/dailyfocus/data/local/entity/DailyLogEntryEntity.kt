@@ -7,7 +7,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity(
-    tableName = "daily_log_entries",
+    tableName = "focus_logs",
     indices = [Index(value = ["date"])]
 )
 data class DailyLogEntryEntity(
@@ -16,6 +16,5 @@ data class DailyLogEntryEntity(
     val durationMinutes: Int,
     val note: String? = null,
     val date: LocalDate,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GoalItemDao {
 
-    @Query("SELECT * FROM goal_items WHERE goalId = :goalId ORDER BY position ASC")
+    @Query("SELECT * FROM goal_items WHERE goalId = :goalId ORDER BY id ASC")
     fun getByGoal(goalId: Long): Flow<List<GoalItemEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

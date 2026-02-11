@@ -68,7 +68,7 @@ fun HabitCard(
                 // Info Section
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = habitWithStreak.habit.name,
+                        text = habitWithStreak.habit.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )

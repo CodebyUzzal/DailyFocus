@@ -1,34 +1,31 @@
 package com.dailyfocus.presentation.today
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.Alignment
-import androidx.compose.material.icons.filled.Check
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
 import com.dailyfocus.core.ui.components.EmptyState
 import com.dailyfocus.core.ui.components.GreetingHeader
 import com.dailyfocus.core.ui.components.PremiumExtendedFAB
 import com.dailyfocus.core.ui.components.SectionHeader
 import com.dailyfocus.core.ui.theme.Spacing
+import com.dailyfocus.domain.model.TaskCategory
 import com.dailyfocus.presentation.today.components.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-
 /**
- * Main Today tab screen combining daily checklist, today tasks, and category filter.
+ * Main Today tab screen — unified task list with category filtering.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,10 +35,8 @@ fun TodayScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
-
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle messages
     LaunchedEffect(state.userMessage) {
         state.userMessage?.let { message ->
             snackbarHostState.showSnackbar(message.text)
@@ -50,18 +45,7 @@ fun TodayScreen(
     }
 
     DailyFocusScaffold(
-        topBar = {
-            // No standard TopAppBar, using GreetingHeader inside the scrollable content or fixed at top?
-            // Plan says "Hero Header (Greeting...)" implying it's part of the scroll or a custom top bar.
-            // "Top of Today screen" -> usually scrollable so it disappears when scrolling down?
-            // Or fixed? Reference apps usually scroll it.
-            // However, GreetingHeader is large.
-            // Let's hide the default TopAppBar and put GreetingHeader as the first item in lazy column.
-            // BUT we have a "Settings" action. We need to place that somewhere.
-            // Maybe a row with Greeting and Settings icon?
-            // Or a transparent TopAppBar overlay?
-            // Let's implement a custom top row in the scrollable content.
-        },
+        topBar = { /* GreetingHeader is inside the LazyColumn */ },
         floatingActionButton = {
             PremiumExtendedFAB(
                 onClick = { showAddDialog = true },
@@ -77,7 +61,7 @@ fun TodayScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -86,15 +70,15 @@ fun TodayScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(bottom = Spacing.maximize), // Bottom padding for FAB
-                verticalArrangement = Arrangement.spacedBy(Spacing.l) // Wider spacing for premium feel
+                contentPadding = PaddingValues(bottom = Spacing.maximize),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l)
             ) {
-                // ── Header Section ───────────────────────────────────────────
+                // ── Header ──────────────────────────────────────────────
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top // Align top to handle different heights
+                        verticalAlignment = Alignment.Top
                     ) {
                         GreetingHeader(
                             username = state.userName,
@@ -109,26 +93,24 @@ fun TodayScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Manage routines",
+                                contentDescription = "Manage recurring tasks",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
 
-                // ── Summary Card ─────────────────────────────────────────────
+                // ── Summary Card ────────────────────────────────────────
                 item {
                     Box(modifier = Modifier.padding(horizontal = Spacing.m)) {
-                        // Calculate progress (just an example calculation)
-                        val totalTasks = state.dailyChecklist.size + state.todayTasks.size
-                        val completedTasks = state.dailyChecklist.count { it.isCompleted } + state.todayTasks.count { it.task.isCompleted }
+                        val totalTasks = state.todayTasks.size
+                        val completedTasks = state.todayTasks.count { it.isCompleted }
                         val progress = if (totalTasks > 0) completedTasks.toFloat() / totalTasks else 0f
-                        
                         SummaryCard(completionPercentage = progress)
                     }
                 }
 
-                // ── Filters ──────────────────────────────────────────────────
+                // ── Filters ─────────────────────────────────────────────
                 item {
                     CategoryFilterChips(
                         selectedCategory = state.categoryFilter,
@@ -136,43 +118,25 @@ fun TodayScreen(
                     )
                 }
 
-                // ── Routines Section ─────────────────────────────────────────
-                if (state.dailyChecklist.isNotEmpty()) {
-                    item {
-                        SectionHeader(
-                            title = "Daily Routines",
-                            modifier = Modifier.padding(horizontal = Spacing.m)
-                        )
-                    }
-                    items(state.dailyChecklist, key = { "routine_${it.id}" }) { instance ->
-                        DailyTaskItem(
-                            title = instance.title,
-                            isCompleted = instance.isCompleted,
-                            onToggle = { viewModel.onToggleRecurringInstance(instance.id, instance.isCompleted) }
-                        )
-                    }
-                }
-
-                // ── One-off Tasks Section ────────────────────────────────────
+                // ── Tasks ───────────────────────────────────────────────
                 if (state.todayTasks.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            title = "Priorities",
-                            modifier = Modifier.padding(horizontal = Spacing.m),
-                            color = MaterialTheme.colorScheme.secondary
+                            title = "Today's Tasks",
+                            modifier = Modifier.padding(horizontal = Spacing.m)
                         )
                     }
-                    items(state.todayTasks, key = { "task_${it.task.id}" }) { taskWithItems ->
-                        TodayTaskCard(
-                            taskWithItems = taskWithItems,
-                            onToggleTask = { viewModel.onToggleTodayTask(taskWithItems.task) },
-                            onToggleItem = { item -> viewModel.onToggleTaskItem(item, taskWithItems.task) },
-                            onAddSubItem = viewModel::onAddTaskItem
+                    items(state.todayTasks, key = { "task_${it.id}" }) { task ->
+                        DailyTaskItem(
+                            title = task.title,
+                            isCompleted = task.isCompleted,
+                            category = task.category,
+                            isRecurring = task.recurringTaskId != null,
+                            onToggle = { viewModel.onToggleTodayTask(task) }
                         )
                     }
-                } else if (state.dailyChecklist.isEmpty()) {
-                    // Empty State if BOTH are empty
-                     item {
+                } else {
+                    item {
                         EmptyState(
                             message = "You're all set for today.",
                             subMessage = "Take a breath or add a new task.",
@@ -181,23 +145,22 @@ fun TodayScreen(
                     }
                 }
 
-                 item {
-                    Spacer(modifier = Modifier.height(Spacing.maximize)) // Fab clearance
+                item {
+                    Spacer(modifier = Modifier.height(Spacing.maximize))
                 }
             }
         }
     }
 
     if (showAddDialog) {
-        // This dialog is for One-off tasks only. Routines are managed elsewhere (assumed).
-        // Updating title to be specific.
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { title, category ->
                 viewModel.onAddTask(title, category)
                 showAddDialog = false
             },
-            dialogTitle = "New One-off Task" // Pass the specific title
+            defaultCategory = state.categoryFilter ?: TaskCategory.PERSONAL,
+            dialogTitle = "New Task"
         )
     }
 }

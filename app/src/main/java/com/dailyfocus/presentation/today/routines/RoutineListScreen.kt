@@ -1,6 +1,5 @@
 package com.dailyfocus.presentation.today.routines
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,13 +17,13 @@ import com.dailyfocus.core.ui.components.DailyFocusCard
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
 import com.dailyfocus.core.ui.components.EmptyState
 import com.dailyfocus.core.ui.components.PremiumExtendedFAB
-import com.dailyfocus.core.ui.theme.AppShapes
 import com.dailyfocus.core.ui.theme.Elevation
 import com.dailyfocus.core.ui.theme.Spacing
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dailyfocus.domain.model.Routine
+import com.dailyfocus.domain.model.RecurringTask
 import com.dailyfocus.domain.model.TaskCategory
+import java.time.DayOfWeek
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +33,7 @@ fun RoutineListScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
-    var routineToEdit by remember { mutableStateOf<Routine?>(null) }
+    var routineToEdit by remember { mutableStateOf<RecurringTask?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.userMessage) {
@@ -52,7 +51,7 @@ fun RoutineListScreen(
                          Icon(Icons.Default.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface)
                      }
                      Text(
-                         text = "Manage Routines", 
+                         text = "Manage Recurring Tasks",
                          style = MaterialTheme.typography.headlineMedium,
                          color = MaterialTheme.colorScheme.primary
                      )
@@ -62,7 +61,7 @@ fun RoutineListScreen(
         floatingActionButton = {
             PremiumExtendedFAB(
                 onClick = { showAddDialog = true },
-                text = { Text("Add Routine") },
+                text = { Text("Add Task") },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 containerColor = MaterialTheme.colorScheme.primary
             )
@@ -77,8 +76,8 @@ fun RoutineListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 EmptyState(
-                    message = "No routines yet.",
-                    subMessage = "Create a routine to simplify your day.",
+                    message = "No recurring tasks yet.",
+                    subMessage = "Create a recurring task to automate your day.",
                     icon = Icons.Default.Edit
                 )
             }
@@ -90,12 +89,12 @@ fun RoutineListScreen(
                 contentPadding = PaddingValues(bottom = Spacing.maximize),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                items(state.routines, key = { it.id }) { routine ->
-                    RoutineItemCard(
-                        routine = routine,
-                        onToggleActive = { viewModel.onToggleActive(routine) },
-                        onEdit = { routineToEdit = routine },
-                        onDelete = { viewModel.onDeleteRoutine(routine.id) }
+                items(state.routines, key = { it.id }) { task ->
+                    RecurringTaskItemCard(
+                        task = task,
+                        onToggleActive = { viewModel.onToggleActive(task) },
+                        onEdit = { routineToEdit = task },
+                        onDelete = { viewModel.onDeleteRoutine(task.id) }
                     )
                 }
             }
@@ -103,17 +102,19 @@ fun RoutineListScreen(
     }
 
     if (showAddDialog || routineToEdit != null) {
-        AddEditRoutineDialog(
-            routineToEdit = routineToEdit,
+        AddEditRecurringTaskDialog(
+            taskToEdit = routineToEdit,
             onDismiss = {
                 showAddDialog = false
                 routineToEdit = null
             },
-            onConfirm = { title, category ->
+            onConfirm = { title, category, daysOfWeek ->
                 if (routineToEdit != null) {
-                    viewModel.onUpdateRoutine(routineToEdit!!.copy(title = title, category = category))
+                    viewModel.onUpdateRoutine(
+                        routineToEdit!!.copy(title = title, category = category, daysOfWeek = daysOfWeek)
+                    )
                 } else {
-                    viewModel.onAddRoutine(title, category)
+                    viewModel.onAddRoutine(title, category, daysOfWeek)
                 }
                 showAddDialog = false
                 routineToEdit = null
@@ -123,8 +124,8 @@ fun RoutineListScreen(
 }
 
 @Composable
-fun RoutineItemCard(
-    routine: Routine,
+fun RecurringTaskItemCard(
+    task: RecurringTask,
     onToggleActive: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -143,17 +144,29 @@ fun RoutineItemCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = routine.title,
+                    text = task.title,
                     style = MaterialTheme.typography.titleMedium
                 )
-                Text(
-                    text = routine.category.name.lowercase().replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Text(
+                        text = task.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (task.daysOfWeek.isNotEmpty()) {
+                        Text(
+                            text = "• ${task.daysOfWeek.joinToString(", ") { it.name.take(3) }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             Switch(
-                checked = routine.isActive,
+                checked = task.isActive,
                 onCheckedChange = { onToggleActive() }
             )
             IconButton(onClick = onEdit) {
@@ -166,27 +179,31 @@ fun RoutineItemCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AddEditRoutineDialog(
-    routineToEdit: Routine?,
+fun AddEditRecurringTaskDialog(
+    taskToEdit: RecurringTask?,
     onDismiss: () -> Unit,
-    onConfirm: (String, TaskCategory) -> Unit
+    onConfirm: (String, TaskCategory, Set<DayOfWeek>) -> Unit
 ) {
-    var title by remember { mutableStateOf(routineToEdit?.title ?: "") }
-    var selectedCategory by remember { mutableStateOf(routineToEdit?.category ?: TaskCategory.PERSONAL) }
+    var title by remember { mutableStateOf(taskToEdit?.title ?: "") }
+    var selectedCategory by remember { mutableStateOf(taskToEdit?.category ?: TaskCategory.PERSONAL) }
+    var selectedDays by remember { mutableStateOf(taskToEdit?.daysOfWeek ?: emptySet()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (routineToEdit == null) "New Routine" else "Edit Routine") },
+        title = { Text(if (taskToEdit == null) "New Recurring Task" else "Edit Recurring Task") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Routine Title") },
+                    label = { Text("Task Title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                // Category selection
+                Text("Category", style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TaskCategory.entries.forEach { category ->
                         FilterChip(
@@ -196,13 +213,30 @@ fun AddEditRoutineDialog(
                         )
                     }
                 }
+                // Day selection
+                Text("Active Days (empty = every day)", style = MaterialTheme.typography.labelMedium)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    DayOfWeek.entries.forEach { day ->
+                        FilterChip(
+                            selected = day in selectedDays,
+                            onClick = {
+                                selectedDays = if (day in selectedDays) {
+                                    selectedDays - day
+                                } else {
+                                    selectedDays + day
+                                }
+                            },
+                            label = { Text(day.name.take(3)) }
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (title.isNotBlank()) {
-                        onConfirm(title, selectedCategory)
+                        onConfirm(title, selectedCategory, selectedDays)
                     }
                 },
                 enabled = title.isNotBlank()

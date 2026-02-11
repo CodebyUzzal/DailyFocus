@@ -1,21 +1,27 @@
 package com.dailyfocus.domain.usecase.habits
 
 import com.dailyfocus.domain.model.Habit
+import com.dailyfocus.domain.model.TaskCategory
 import com.dailyfocus.domain.repository.HabitRepository
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
- * Adds or updates a [Habit].
+ * Creates or updates a habit.
  */
 class AddEditHabitUseCase @Inject constructor(
     private val repository: HabitRepository
 ) {
-    suspend operator fun invoke(habit: Habit) {
-        if (habit.id == 0L) {
-            repository.insertHabit(habit)
+    suspend operator fun invoke(
+        existingId: Long? = null,
+        title: String,
+        category: TaskCategory? = null
+    ): Long {
+        return if (existingId != null && existingId > 0) {
+            val existing = repository.getHabitById(existingId) ?: throw IllegalArgumentException("Habit $existingId not found")
+            repository.updateHabit(existing.copy(title = title, category = category))
+            existingId
         } else {
-            repository.updateHabit(habit.copy(updatedAt = LocalDateTime.now()))
+            repository.insertHabit(Habit(title = title, category = category))
         }
     }
 }

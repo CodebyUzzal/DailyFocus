@@ -3,16 +3,15 @@ package com.dailyfocus.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.dailyfocus.domain.model.TaskCategory
-import java.time.LocalDate
+import java.time.DayOfWeek
 import java.time.LocalDateTime
 
-@Entity(tableName = "habits")
-data class HabitEntity(
+@Entity(tableName = "recurring_tasks")
+data class RecurringTaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
-    val category: TaskCategory? = null,
-    val currentStreak: Int = 0,
-    val longestStreak: Int = 0,
-    val lastCompletedDate: LocalDate? = null,
+    val category: TaskCategory,
+    val daysOfWeek: Set<DayOfWeek> = emptySet(),
+    val isActive: Boolean = true,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

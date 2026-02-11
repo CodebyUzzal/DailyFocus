@@ -1,6 +1,5 @@
 package com.dailyfocus.presentation.habits
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,8 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dailyfocus.domain.model.HabitFrequency
-import com.dailyfocus.domain.usecase.habits.HabitWithStreak
+import com.dailyfocus.domain.model.TaskCategory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,10 +39,9 @@ fun HabitsScreen(
 
     DailyFocusScaffold(
         topBar = {
-            // Using SectionHeader-like title or just standard large text at top of list
              Box(modifier = Modifier.padding(top = Spacing.l, start = Spacing.m, bottom = Spacing.m)) {
                  Text(
-                     text = "Habits", 
+                     text = "Habits",
                      style = MaterialTheme.typography.headlineLarge,
                      color = MaterialTheme.colorScheme.primary
                  )
@@ -55,7 +52,7 @@ fun HabitsScreen(
                 onClick = { showAddDialog = true },
                 text = { Text("New Habit") },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                containerColor = MaterialTheme.colorScheme.secondary, // Green/Teal for habits
+                containerColor = MaterialTheme.colorScheme.secondary,
                 contentColor = MaterialTheme.colorScheme.onSecondary
             )
         },
@@ -97,24 +94,25 @@ fun HabitsScreen(
     if (showAddDialog) {
         AddHabitDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, frequency ->
-                viewModel.onAddHabit(name, frequency)
+            onConfirm = { title, category ->
+                viewModel.onAddHabit(title, category)
                 showAddDialog = false
             }
         )
     }
 }
 
-
-
+/**
+ * Dialog for adding a new habit. Simplified — no HabitFrequency.
+ * Habits are always daily streak-tracked.
+ */
 @Composable
 private fun AddHabitDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, HabitFrequency) -> Unit
+    onConfirm: (String, TaskCategory?) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var isDaily by remember { mutableStateOf(true) }
-    var daysPerWeek by remember { mutableStateOf("5") }
+    var title by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<TaskCategory?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -122,47 +120,34 @@ private fun AddHabitDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Habit name") },
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Habit title") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                Text("Category (optional)", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = isDaily,
-                        onClick = { isDaily = true },
-                        label = { Text("Daily") }
-                    )
-                    FilterChip(
-                        selected = !isDaily,
-                        onClick = { isDaily = false },
-                        label = { Text("Custom Weekly") }
-                    )
-                }
-                if (!isDaily) {
-                    OutlinedTextField(
-                        value = daysPerWeek,
-                        onValueChange = { daysPerWeek = it.filter { c -> c.isDigit() } },
-                        label = { Text("Days per week (1-7)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    TaskCategory.entries.forEach { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = {
+                                selectedCategory = if (selectedCategory == category) null else category
+                            },
+                            label = { Text(category.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isNotBlank()) {
-                        val frequency = if (isDaily) HabitFrequency.Daily
-                        else HabitFrequency.CustomWeekly(
-                            daysPerWeek.toIntOrNull()?.coerceIn(1, 7) ?: 5
-                        )
-                        onConfirm(name, frequency)
+                    if (title.isNotBlank()) {
+                        onConfirm(title, selectedCategory)
                     }
                 },
-                enabled = name.isNotBlank()
+                enabled = title.isNotBlank()
             ) { Text("Add") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }

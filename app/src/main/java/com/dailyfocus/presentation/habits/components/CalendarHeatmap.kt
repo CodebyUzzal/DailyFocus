@@ -10,24 +10,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.core.ui.theme.*
-import com.dailyfocus.domain.usecase.habits.HabitCalendarDay
-import com.dailyfocus.domain.usecase.habits.HabitDayStatus
-import java.time.format.TextStyle
-import java.util.Locale
+import java.time.LocalDate
 
 /**
  * A calendar heatmap showing 90 days of habit completion data.
  * Each cell represents one day, colored by status:
- * - Done (teal), Missed (light red), Today (indigo), Future/Inactive (grey)
+ * - Done (teal), Today (indigo), Missed/Empty (grey)
  */
 @Composable
 fun CalendarHeatmap(
-    days: List<HabitCalendarDay>,
+    completedDates: Set<LocalDate>,
     modifier: Modifier = Modifier
 ) {
-    if (days.isEmpty()) return
+    val today = LocalDate.now()
+    val startDate = today.minusDays(89) // 90 days including today
+    val days = (0L until 90L).map { startDate.plusDays(it) }
 
     Column(modifier = modifier.padding(16.dp)) {
         Text(
@@ -65,8 +65,13 @@ fun CalendarHeatmap(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                week.forEach { day ->
-                    HeatmapCell(day = day)
+                week.forEach { date ->
+                    HeatmapCell(
+                        date = date,
+                        isCompleted = date in completedDates,
+                        isToday = date == today,
+                        isFuture = date.isAfter(today)
+                    )
                 }
                 // Pad incomplete weeks
                 repeat(7 - week.size) {
@@ -91,13 +96,17 @@ fun CalendarHeatmap(
 }
 
 @Composable
-private fun HeatmapCell(day: HabitCalendarDay) {
-    val color = when (day.status) {
-        HabitDayStatus.DONE -> HeatmapDone
-        HabitDayStatus.MISSED -> HeatmapMissed
-        HabitDayStatus.TODAY -> HeatmapToday
-        HabitDayStatus.FUTURE -> HeatmapEmpty.copy(alpha = 0.3f)
-        HabitDayStatus.INACTIVE -> HeatmapEmpty
+private fun HeatmapCell(
+    date: LocalDate,
+    isCompleted: Boolean,
+    isToday: Boolean,
+    isFuture: Boolean
+) {
+    val color = when {
+        isToday -> HeatmapToday
+        isCompleted -> HeatmapDone
+        isFuture -> HeatmapEmpty.copy(alpha = 0.3f)
+        else -> HeatmapMissed.copy(alpha = 0.4f)
     }
 
     val shape = RoundedCornerShape(4.dp)
@@ -108,7 +117,7 @@ private fun HeatmapCell(day: HabitCalendarDay) {
             .clip(shape)
             .background(color.copy(alpha = 0.8f))
             .then(
-                if (day.status == HabitDayStatus.TODAY)
+                if (isToday)
                     Modifier.border(2.dp, HeatmapToday, shape)
                 else Modifier
             )
@@ -117,7 +126,7 @@ private fun HeatmapCell(day: HabitCalendarDay) {
 
 @Composable
 private fun LegendItem(
-    color: androidx.compose.ui.graphics.Color,
+    color: Color,
     label: String
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {

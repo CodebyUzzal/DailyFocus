@@ -10,6 +10,5 @@ data class GoalEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val type: GoalType = GoalType.INFINITE,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

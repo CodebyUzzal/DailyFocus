@@ -2,8 +2,8 @@ package com.dailyfocus.data.local.database
 
 import androidx.room.TypeConverter
 import com.dailyfocus.domain.model.GoalType
-import com.dailyfocus.domain.model.HabitFrequency
 import com.dailyfocus.domain.model.TaskCategory
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -35,7 +35,8 @@ class Converters {
     fun fromTaskCategory(category: TaskCategory?): String? = category?.name
 
     @TypeConverter
-    fun toTaskCategory(value: String?): TaskCategory? = value?.let { TaskCategory.valueOf(it) }
+    fun toTaskCategory(value: String?): TaskCategory? =
+        value?.let { runCatching { TaskCategory.valueOf(it) }.getOrNull() }
 
     // ── GoalType ────────────────────────────────────────────────────────
 
@@ -43,14 +44,28 @@ class Converters {
     fun fromGoalType(type: GoalType?): String? = type?.name
 
     @TypeConverter
-    fun toGoalType(value: String?): GoalType? = value?.let { GoalType.valueOf(it) }
+    fun toGoalType(value: String?): GoalType? =
+        value?.let { runCatching { GoalType.valueOf(it) }.getOrNull() }
 
-    // ── HabitFrequency ──────────────────────────────────────────────────
+    // ── Set<DayOfWeek> ──────────────────────────────────────────────────
+    // Stored as uppercase comma-separated string: "MONDAY,WEDNESDAY,FRIDAY"
+    // Safe parsing: handles empty strings, trailing commas, malformed entries.
 
     @TypeConverter
-    fun fromHabitFrequency(frequency: HabitFrequency?): String? = frequency?.toStorageString()
+    fun fromDayOfWeekSet(days: Set<DayOfWeek>?): String? {
+        if (days == null || days.isEmpty()) return null
+        return days.joinToString(",") { it.name }
+    }
 
     @TypeConverter
-    fun toHabitFrequency(value: String?): HabitFrequency? =
-        value?.let { HabitFrequency.fromStorageString(it) }
+    fun toDayOfWeekSet(value: String?): Set<DayOfWeek> {
+        if (value.isNullOrBlank()) return emptySet()
+        return value.split(",")
+            .map { it.trim().uppercase() }
+            .filter { it.isNotBlank() }
+            .mapNotNull { name ->
+                runCatching { DayOfWeek.valueOf(name) }.getOrNull()
+            }
+            .toSet()
+    }
 }

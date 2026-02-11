@@ -19,6 +19,9 @@ class DailyLogRepositoryImpl @Inject constructor(
     override fun getByDate(date: LocalDate): Flow<List<DailyLogEntry>> =
         dao.getByDate(date).map { list -> list.map { it.toDomain() } }
 
+    override fun getByDateRange(startDate: LocalDate, endDate: LocalDate): Flow<List<DailyLogEntry>> =
+        dao.getByDateRange(startDate, endDate).map { list -> list.map { it.toDomain() } }
+
     override suspend fun insert(entry: DailyLogEntry): Long =
         dao.insert(entry.toEntity())
 
@@ -31,10 +34,10 @@ class DailyLogRepositoryImpl @Inject constructor(
 
 private fun DailyLogEntryEntity.toDomain() = DailyLogEntry(
     id = id, activityName = activityName, durationMinutes = durationMinutes,
-    note = note, date = date, createdAt = createdAt, updatedAt = updatedAt
+    note = note, date = date, createdAt = createdAt
 )
 
 private fun DailyLogEntry.toEntity() = DailyLogEntryEntity(
     id = id, activityName = activityName, durationMinutes = durationMinutes,
-    note = note, date = date, createdAt = createdAt, updatedAt = updatedAt
+    note = note, date = date, createdAt = createdAt
 )

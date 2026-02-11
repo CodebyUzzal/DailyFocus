@@ -5,17 +5,16 @@ import java.time.LocalDateTime
 
 /**
  * A one-time task that exists only for a specific day.
- * Unlike [RecurringTask], this does NOT reappear the next day.
- * Supports one level of nesting via [TaskItem] children.
+ * When [recurringTaskId] is non-null, this task was auto-generated
+ * from a [RecurringTask].
  *
  * @property id unique identifier
  * @property title display name
- * @property category personal or office classification
+ * @property category Personal or Office classification
  * @property date the date this task belongs to
- * @property isCompleted auto-set to true when all children are completed (or manually toggled if no children)
- * @property position stable ordering index within the day
+ * @property isCompleted whether the task is done
+ * @property recurringTaskId FK to source RecurringTask (null for manual tasks)
  * @property createdAt audit timestamp
- * @property updatedAt audit timestamp
  */
 data class TodayTask(
     val id: Long = 0,
@@ -23,7 +22,6 @@ data class TodayTask(
     val category: TaskCategory,
     val date: LocalDate,
     val isCompleted: Boolean = false,
-    val position: Int = 0,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    val recurringTaskId: Long? = null,
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

@@ -3,7 +3,6 @@ package com.dailyfocus.presentation.goals
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailyfocus.core.util.UiMessage
-import com.dailyfocus.domain.model.Goal
 import com.dailyfocus.domain.model.GoalItem
 import com.dailyfocus.domain.model.GoalType
 import com.dailyfocus.domain.usecase.goals.*
@@ -40,9 +39,7 @@ class GoalsViewModel @Inject constructor(
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                addEditGoal.addGoal(
-                    Goal(title = title.trim(), type = type)
-                )
+                addEditGoal.addGoal(title.trim(), type)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed: ${e.message}"))
@@ -67,9 +64,7 @@ class GoalsViewModel @Inject constructor(
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                addEditGoal.addGoalItem(
-                    GoalItem(goalId = goalId, title = title.trim())
-                )
+                addEditGoal.addItem(goalId, title.trim())
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed: ${e.message}"))
