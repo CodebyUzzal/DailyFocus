@@ -2,31 +2,55 @@ package com.dailyfocus.presentation.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.dailyfocus.core.preferences.AppPreferences
 import com.dailyfocus.presentation.goals.GoalsScreen
 import com.dailyfocus.presentation.habits.HabitDetailScreen
 import com.dailyfocus.presentation.habits.HabitsScreen
 import com.dailyfocus.presentation.log.LogScreen
+import com.dailyfocus.presentation.onboarding.OnboardingScreen
 import com.dailyfocus.presentation.today.TodayScreen
 import com.dailyfocus.presentation.today.routines.RoutineListScreen
+import javax.inject.Inject
 
 /**
  * Root composable providing bottom navigation and NavHost.
+ * Checks onboarding state to determine start destination.
  */
 @Composable
-fun MainScreen() {
+fun MainScreen(appPreferences: AppPreferences) {
+    val isOnboardingComplete by appPreferences.isOnboardingComplete
+        .collectAsState(initial = null) // null = still loading
+
+    // Show nothing while loading preference
+    if (isOnboardingComplete == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val startDestination = if (isOnboardingComplete == true) {
+        Screen.Today.route
+    } else {
+        Destinations.ONBOARDING
+    }
+
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
 
-    // Only show bottom bar on main tabs
+    // Only show bottom bar on main tabs (not onboarding or detail screens)
     val showBottomBar = Screen.bottomNavItems.any { screen ->
         currentDestination?.hierarchy?.any { it.route == screen.route } == true
     }
@@ -66,11 +90,22 @@ fun MainScreen() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Today.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() }
         ) {
+            // ── Onboarding ──────────────────────────────────────────
+            composable(Destinations.ONBOARDING) {
+                OnboardingScreen(
+                    onComplete = {
+                        navController.navigate(Screen.Today.route) {
+                            popUpTo(Destinations.ONBOARDING) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // ── Today ───────────────────────────────────────────────
             composable(Screen.Today.route) {
                 TodayScreen(

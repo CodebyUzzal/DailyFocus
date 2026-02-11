@@ -24,7 +24,7 @@ import com.dailyfocus.core.ui.theme.Spacing
 
 @Composable
 fun GreetingHeader(
-    username: String = "Uzzal",
+    username: String,
     date: String,
     modifier: Modifier = Modifier
 ) {
@@ -32,6 +32,16 @@ fun GreetingHeader(
 
     LaunchedEffect(Unit) {
         visible.value = true
+    }
+
+    // Time-based greeting
+    val greeting = remember {
+        val hour = java.time.LocalTime.now().hour
+        when {
+            hour < 12 -> "Good Morning,"
+            hour < 17 -> "Good Afternoon,"
+            else -> "Good Evening,"
+        }
     }
 
     AnimatedVisibility(
@@ -44,7 +54,7 @@ fun GreetingHeader(
                 .padding(horizontal = Spacing.m, vertical = Spacing.l)
         ) {
             Text(
-                text = "Good Evening,",
+                text = greeting,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

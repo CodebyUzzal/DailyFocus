@@ -23,6 +23,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 
 /** Non-bottom-nav destinations */
 object Destinations {
+    const val ONBOARDING = "onboarding"
     const val ROUTINES = "routines"
     const val HABIT_DETAIL = "habit_detail/{habitId}"
     fun habitDetail(habitId: Long) = "habit_detail/$habitId"

@@ -97,6 +97,7 @@ fun TodayScreen(
                         verticalAlignment = Alignment.Top // Align top to handle different heights
                     ) {
                         GreetingHeader(
+                            username = state.userName,
                             date = state.date.format(
                                 DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
                             ),

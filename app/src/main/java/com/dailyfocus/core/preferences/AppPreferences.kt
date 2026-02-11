@@ -3,6 +3,7 @@ package com.dailyfocus.core.preferences
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -31,6 +32,8 @@ class AppPreferences @Inject constructor(
         val LAST_OPEN_DATE = stringPreferencesKey("last_open_date")
         val CATEGORY_FILTER = stringPreferencesKey("category_filter")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val USER_NAME = stringPreferencesKey("user_name")
+        val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
     }
 
     // ── Last Open Date ──────────────────────────────────────────────────
@@ -77,6 +80,26 @@ class AppPreferences @Inject constructor(
         context.dataStore.edit { prefs ->
             prefs[Keys.THEME_MODE] = mode
         }
+    }
+
+    // ── User Name ────────────────────────────────────────────────────────
+
+    /** Observe the user's display name. Null means onboarding not completed. */
+    val userName: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[Keys.USER_NAME]
+    }
+
+    /** Save the user's display name during onboarding. */
+    suspend fun setUserName(name: String) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.USER_NAME] = name
+            prefs[Keys.ONBOARDING_COMPLETE] = true
+        }
+    }
+
+    /** Whether onboarding has been completed. */
+    val isOnboardingComplete: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.ONBOARDING_COMPLETE] ?: false
     }
 
     companion object {

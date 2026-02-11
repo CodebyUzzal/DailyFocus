@@ -13,6 +13,7 @@ import java.time.LocalDate
  */
 data class TodayUiState(
     val date: LocalDate = LocalDate.now(),
+    val userName: String = "",
     val dailyChecklist: List<DailyTaskInstance> = emptyList(),
     val todayTasks: List<TodayTaskWithItems> = emptyList(),
     val categoryFilter: TaskCategory? = null,

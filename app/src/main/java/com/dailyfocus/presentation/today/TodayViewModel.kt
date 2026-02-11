@@ -42,7 +42,17 @@ class TodayViewModel @Inject constructor(
     init {
         initializeDay()
         observeCategoryFilter()
+        observeUserName()
         observeData()
+    }
+
+    /** Observe the user's display name from DataStore. */
+    private fun observeUserName() {
+        viewModelScope.launch {
+            preferences.userName.collect { name ->
+                _uiState.update { it.copy(userName = name ?: "") }
+            }
+        }
     }
 
     /** Run boundary check on init to generate missing instances. */
