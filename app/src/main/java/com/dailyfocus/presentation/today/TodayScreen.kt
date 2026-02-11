@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,7 @@ import java.time.format.FormatStyle
 fun TodayScreen(
     onNavigateToRoutines: () -> Unit,
     onOpenSettings: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     viewModel: TodayViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -89,21 +91,33 @@ fun TodayScreen(
                             ),
                             modifier = Modifier.weight(1f)
                         )
-                        Row(modifier = Modifier.padding(top = Spacing.l, end = Spacing.m)) {
-                             // Routines Button
-                            IconButton(onClick = onNavigateToRoutines) {
+                        // Settings / Overflow Menu
+                        Box {
+                            var showMenu by remember { mutableStateOf(false) }
+                            IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
-                                    contentDescription = "Manage recurring tasks",
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            // Settings Button
-                            IconButton(onClick = onOpenSettings) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Settings") },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenSettings()
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("About") },
+                                    onClick = {
+                                        showMenu = false
+                                        onNavigateToAbout()
+                                    }
                                 )
                             }
                         }

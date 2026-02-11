@@ -126,6 +126,9 @@ fun MainScreen(appPreferences: AppPreferences) {
                     },
                     onOpenSettings = {
                         showSettingsDialog = true
+                    },
+                    onNavigateToAbout = {
+                        navController.navigate(Destinations.ABOUT)
                     }
                 )
             }
@@ -172,6 +175,12 @@ fun MainScreen(appPreferences: AppPreferences) {
 
             composable(Destinations.HISTORY) {
                 com.dailyfocus.presentation.history.HistoryScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Destinations.ABOUT) {
+                com.dailyfocus.presentation.about.AboutScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
