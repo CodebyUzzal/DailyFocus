@@ -14,10 +14,16 @@ class AddEditGoalUseCase @Inject constructor(
 ) {
     suspend fun addGoal(
         title: String,
+        description: String? = null,
         type: GoalType = GoalType.INFINITE,
-        deadline: java.time.LocalDate? = null
+        deadline: java.time.LocalDate? = null,
+        initialMilestone: String? = null
     ): Long {
-        return repository.insertGoal(Goal(title = title, type = type, deadline = deadline))
+        val goalId = repository.insertGoal(Goal(title = title, description = description, type = type, deadline = deadline))
+        if (!initialMilestone.isNullOrBlank()) {
+            repository.insertGoalItem(GoalItem(goalId = goalId, title = initialMilestone))
+        }
+        return goalId
     }
 
     suspend fun updateGoal(goal: Goal) {

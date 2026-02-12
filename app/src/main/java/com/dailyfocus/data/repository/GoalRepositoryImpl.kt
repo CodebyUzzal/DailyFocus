@@ -45,11 +45,11 @@ class GoalRepositoryImpl @Inject constructor(
 }
 
 private fun GoalEntity.toDomain() = Goal(
-    id = id, title = title, type = type, deadline = deadline, createdAt = createdAt
+    id = id, title = title, description = description, type = type, deadline = deadline, createdAt = createdAt
 )
 
 private fun Goal.toEntity() = GoalEntity(
-    id = id, title = title, type = type, deadline = deadline, createdAt = createdAt
+    id = id, title = title, description = description, type = type, deadline = deadline, createdAt = createdAt
 )
 
 private fun GoalItemEntity.toDomain() = GoalItem(

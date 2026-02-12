@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 data class Goal(
     val id: Long = 0,
     val title: String,
+    val description: String? = null,
     val type: GoalType = GoalType.INFINITE,
     val deadline: java.time.LocalDate? = null,
     val createdAt: LocalDateTime = LocalDateTime.now()

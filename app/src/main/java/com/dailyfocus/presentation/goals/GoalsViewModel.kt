@@ -35,11 +35,17 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onAddGoal(title: String, type: GoalType, deadline: java.time.LocalDate? = null) {
+    fun onAddGoal(
+        title: String, 
+        description: String?, 
+        type: GoalType, 
+        deadline: java.time.LocalDate? = null,
+        initialMilestone: String?
+    ) {
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                addEditGoal.addGoal(title.trim(), type, deadline)
+                addEditGoal.addGoal(title.trim(), description?.trim(), type, deadline, initialMilestone?.trim())
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed: ${e.message}"))
