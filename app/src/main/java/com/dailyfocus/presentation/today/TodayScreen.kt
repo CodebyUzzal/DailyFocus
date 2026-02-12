@@ -1,5 +1,12 @@
 package com.dailyfocus.presentation.today
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,28 +14,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dailyfocus.core.ui.components.DailyFocusScaffold
-import com.dailyfocus.core.ui.components.EmptyState
-import com.dailyfocus.core.ui.components.GreetingHeader
-import com.dailyfocus.core.ui.components.PremiumExtendedFAB
-import com.dailyfocus.core.ui.components.SectionHeader
+import com.dailyfocus.core.ui.components.*
 import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.domain.model.TaskCategory
 import com.dailyfocus.presentation.today.components.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/**
- * Main Today tab screen — unified task list with category filtering.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
@@ -39,6 +42,10 @@ fun TodayScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    
+    // Collapsible state for completed tasks
+    var isCompletedExpanded by remember { mutableStateOf(false) }
+    
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.userMessage) {
@@ -49,7 +56,7 @@ fun TodayScreen(
     }
 
     DailyFocusScaffold(
-        topBar = { /* GreetingHeader is inside the LazyColumn */ },
+        topBar = { /* Header is inside LazyColumn */ },
         floatingActionButton = {
             PremiumExtendedFAB(
                 onClick = { showAddDialog = true },
@@ -60,129 +67,171 @@ fun TodayScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(bottom = Spacing.maximize),
-                verticalArrangement = Arrangement.spacedBy(Spacing.l)
-            ) {
-                // ── Header ──────────────────────────────────────────────
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        GreetingHeader(
-                            username = state.userName,
-                            date = state.date.format(
-                                DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
-                            ),
-                            modifier = Modifier.weight(1f)
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Routines Button
-                            IconButton(onClick = onNavigateToRoutines) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = "Manage recurring tasks",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+        ) {
+            if (state.isLoading) {
+                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                     CircularProgressIndicator()
+                 }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 96.dp), // Check implementation plan
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    // ── Header ──────────────────────────────────────────────
+                    item {
+                         val totalTasks = state.todayTasks.size
+                         val completedTasks = state.todayTasks.count { it.isCompleted }
+                         val progress = if (totalTasks > 0) completedTasks.toFloat() / totalTasks else 0f
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            CompactGreetingHeader(
+                                username = state.userName,
+                                date = state.date.format(
+                                    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                ),
+                                progress = progress,
+                                taskCount = totalTasks,
+                                completedCount = completedTasks,
+                                modifier = Modifier.weight(1f)
+                            )
                             
-                            // Settings / Overflow Menu
-                            Box {
-                                var showMenu by remember { mutableStateOf(false) }
-                                IconButton(onClick = { showMenu = true }) {
+                            // Actions
+                             Row(
+                                 verticalAlignment = Alignment.CenterVertically, 
+                                 modifier = Modifier.padding(top = Spacing.l, end = Spacing.s)
+                             ) {
+                                IconButton(onClick = onNavigateToRoutines) {
                                     Icon(
-                                        imageVector = Icons.Default.MoreVert,
-                                        contentDescription = "More",
+                                        imageVector = Icons.Default.DateRange,
+                                        contentDescription = "Manage routines",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                DropdownMenu(
-                                    expanded = showMenu,
-                                    onDismissRequest = { showMenu = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Settings") },
-                                        onClick = {
-                                            showMenu = false
-                                            onOpenSettings()
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("About") },
-                                        onClick = {
-                                            showMenu = false
-                                            onNavigateToAbout()
-                                        }
-                                    )
+                                Box {
+                                    var showMenu by remember { mutableStateOf(false) }
+                                    IconButton(onClick = { showMenu = true }) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "More",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = showMenu,
+                                        onDismissRequest = { showMenu = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Settings") },
+                                            onClick = { showMenu = false; onOpenSettings() }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("About") },
+                                            onClick = { showMenu = false; onNavigateToAbout() }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // ── Summary Card ────────────────────────────────────────
-                item {
-                    Box(modifier = Modifier.padding(horizontal = Spacing.m)) {
-                        val totalTasks = state.todayTasks.size
-                        val completedTasks = state.todayTasks.count { it.isCompleted }
-                        val progress = if (totalTasks > 0) completedTasks.toFloat() / totalTasks else 0f
-                        SummaryCard(completionPercentage = progress)
-                    }
-                }
-
-                // ── Filters ─────────────────────────────────────────────
-                item {
-                    CategoryFilterChips(
-                        selectedCategory = state.categoryFilter,
-                        onCategorySelected = viewModel::onCategoryFilterChanged
-                    )
-                }
-
-                // ── Tasks ───────────────────────────────────────────────
-                if (state.todayTasks.isNotEmpty()) {
+                    // ── Filters ─────────────────────────────────────────────
                     item {
-                        SectionHeader(
-                            title = "Today's Tasks",
-                            modifier = Modifier.padding(horizontal = Spacing.m)
+                        CategoryFilterChips(
+                            selectedCategory = state.categoryFilter,
+                            onCategorySelected = viewModel::onCategoryFilterChanged
                         )
                     }
-                    items(state.todayTasks, key = { "task_${it.id}" }) { task ->
-                        DailyTaskItem(
-                            title = task.title,
-                            isCompleted = task.isCompleted,
-                            category = task.category,
-                            isRecurring = task.recurringTaskId != null,
-                            onToggle = { viewModel.onToggleTodayTask(task) }
-                        )
-                    }
-                } else {
-                    item {
-                        EmptyState(
-                            message = "You're all set for today.",
-                            subMessage = "Take a breath or add a new task.",
-                            icon = Icons.Default.Check
-                        )
-                    }
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(Spacing.maximize))
+                    // ── Active Tasks ──────────────────────────────────────
+                    val activeTasks = state.todayTasks.filter { !it.isCompleted }
+                    if (activeTasks.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = "Today's Focus",
+                                modifier = Modifier.padding(horizontal = Spacing.m)
+                            )
+                        }
+                        items(activeTasks, key = { "task_${it.id}" }) { task ->
+                            DailyFocusTaskItem(
+                                title = task.title,
+                                isCompleted = task.isCompleted,
+                                category = task.category,
+                                isRecurring = task.recurringTaskId != null,
+                                onToggle = { viewModel.onToggleTodayTask(task) },
+                                modifier = Modifier.padding(horizontal = Spacing.m, vertical = 4.dp)
+                            )
+                        }
+                    } else if (state.todayTasks.isEmpty()) {
+                        item {
+                            EmptyState(
+                                message = "Ready to focus?",
+                                subMessage = "Add your first task for today.",
+                                icon = Icons.Default.Check
+                            )
+                        }
+                    }
+
+                    // ── Completed Tasks (Collapsible) ─────────────────────
+                    val completedTasksList = state.todayTasks.filter { it.isCompleted }
+                    if (completedTasksList.isNotEmpty()) {
+                         item {
+                            Spacer(modifier = Modifier.height(Spacing.m))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { isCompletedExpanded = !isCompletedExpanded }
+                                    .padding(horizontal = Spacing.m, vertical = Spacing.s),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Completed (${completedTasksList.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                val rotation by animateFloatAsState(if (isCompletedExpanded) 180f else 0f)
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (isCompletedExpanded) "Collapse" else "Expand",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.rotate(rotation)
+                                )
+                            }
+                        }
+                        
+                        // Using items directly inside LazyColumn, but need to wrap conditionally
+                        // Since we can't wrap 'items' in 'AnimatedVisibility' easily inside LazyColumn scope without logic
+                        // We will use a separate item for the list if expanded, or just iterate manualy
+                        
+                         if (isCompletedExpanded) {
+                             items(completedTasksList, key = { "task_${it.id}" }) { task ->
+                                DailyFocusTaskItem(
+                                    title = task.title,
+                                    isCompleted = task.isCompleted,
+                                    category = task.category,
+                                    isRecurring = task.recurringTaskId != null,
+                                    onToggle = { viewModel.onToggleTodayTask(task) },
+                                    modifier = Modifier
+                                        .padding(horizontal = Spacing.m, vertical = 4.dp)
+                                        .animateItem() 
+                                )
+                            }
+                        }
+                    }
                 }
+                
+                // Bottom Scroll Overlay
+                ScrollOverlay(
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
@@ -195,7 +244,7 @@ fun TodayScreen(
                 showAddDialog = false
             },
             defaultCategory = state.categoryFilter ?: TaskCategory.PERSONAL,
-            dialogTitle = "New Task"
+            dialogTitle = "New Focus"
         )
     }
 }

@@ -15,52 +15,29 @@ import androidx.core.view.WindowCompat
 private val LightColorScheme = lightColorScheme(
     primary = Primary40,
     onPrimary = Color.White,
-    primaryContainer = Primary80,
-    onPrimaryContainer = Primary30,
     secondary = Secondary40,
     onSecondary = Color.White,
-    secondaryContainer = Secondary80,
-    onSecondaryContainer = Secondary40,
     tertiary = Tertiary40,
     onTertiary = Color.White,
-    tertiaryContainer = Tertiary80,
-    onTertiaryContainer = Tertiary40,
-    error = Error40,
-    onError = Color.White,
-    errorContainer = Error80,
-    onErrorContainer = Error40,
-    surface = Neutral99,
+    background = LightSurface1,
+    surface = LightSurface2, // Cards
     onSurface = Neutral10,
-    surfaceVariant = Neutral90,
-    onSurfaceVariant = NeutralVariant30,
-    outline = NeutralVariant30
+    surfaceVariant = LightSurface3,
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = Primary80,
     onPrimary = Primary30,
-    primaryContainer = Primary30,
-    onPrimaryContainer = Primary80,
     secondary = Secondary80,
     onSecondary = Secondary40,
-    secondaryContainer = Secondary40,
-    onSecondaryContainer = Secondary80,
     tertiary = Tertiary80,
     onTertiary = Tertiary40,
-    tertiaryContainer = Tertiary40,
-    onTertiaryContainer = Tertiary80,
-    error = Error80,
-    onError = Error40,
-    errorContainer = Error40,
-    onErrorContainer = Error80,
-    background = Neutral10,
-    onBackground = Neutral90,
-    surface = Color(0xFF1C1F26), // Slightly tinted dark surface (not pure black)
+    background = Surface1, // Deepest (App Background)
+    surface = Surface3,    // Cards
     onSurface = Neutral90,
-    surfaceVariant = Color(0xFF2A2D35), // Tinted dark variant
-    onSurfaceVariant = NeutralVariant90,
-    outline = Color(0xFF8E9099), // Better contrast outline for dark mode
-    outlineVariant = Color(0xFF44474F) // Subtle divider color
+    surfaceVariant = Surface4, // Elevated
+    onSurfaceVariant = Neutral90,
+    outline = Color(0xFF44474F)
 )
 
 /**

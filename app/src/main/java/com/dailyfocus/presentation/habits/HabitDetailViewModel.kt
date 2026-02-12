@@ -35,7 +35,13 @@ class HabitDetailViewModel @Inject constructor(
                 if (habit != null) {
                     val today = LocalDate.now()
                     val completedToday = habitRepository.hasLogForDate(habitId, today)
-                    val allLogDates = habitRepository.getLogDatesForHabit(habitId)
+                    val allLogDates = habitRepository.getLogDatesForHabit(habitId).toSet()
+
+                    // Calculate last 7 days history
+                    val start = today.minusDays(6)
+                    val history = (0..6).map { i ->
+                        allLogDates.contains(start.plusDays(i.toLong()))
+                    }
 
                     _uiState.update {
                         it.copy(
@@ -43,9 +49,10 @@ class HabitDetailViewModel @Inject constructor(
                                 habit = habit,
                                 currentStreak = habit.currentStreak,
                                 longestStreak = habit.longestStreak,
-                                completedToday = completedToday
+                                completedToday = completedToday,
+                                last7Days = history
                             ),
-                            completedDates = allLogDates.toSet(),
+                            completedDates = allLogDates,
                             isLoading = false
                         )
                     }

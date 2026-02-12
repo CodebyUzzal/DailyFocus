@@ -17,6 +17,7 @@ import com.dailyfocus.core.ui.components.DailyFocusCard
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
 import com.dailyfocus.core.ui.components.EmptyState
 import com.dailyfocus.core.ui.components.PremiumExtendedFAB
+import com.dailyfocus.core.ui.components.DaySelectionRow
 import com.dailyfocus.core.ui.theme.Elevation
 import com.dailyfocus.core.ui.theme.Spacing
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -214,22 +215,17 @@ fun AddEditRecurringTaskDialog(
                     }
                 }
                 // Day selection
-                Text("Active Days (empty = every day)", style = MaterialTheme.typography.labelMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    DayOfWeek.entries.forEach { day ->
-                        FilterChip(
-                            selected = day in selectedDays,
-                            onClick = {
-                                selectedDays = if (day in selectedDays) {
-                                    selectedDays - day
-                                } else {
-                                    selectedDays + day
-                                }
-                            },
-                            label = { Text(day.name.take(3)) }
-                        )
+                Text("Active Days", style = MaterialTheme.typography.labelMedium)
+                DaySelectionRow(
+                    selectedDays = selectedDays,
+                    onDayToggle = { day ->
+                        selectedDays = if (day in selectedDays) {
+                            selectedDays - day
+                        } else {
+                            selectedDays + day
+                        }
                     }
-                }
+                )
             }
         },
         confirmButton = {

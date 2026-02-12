@@ -1,0 +1,182 @@
+package com.dailyfocus.core.ui.components
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.foundation.border
+import com.dailyfocus.core.ui.theme.Elevation
+import com.dailyfocus.core.ui.theme.Radius
+import com.dailyfocus.core.ui.theme.Spacing
+import com.dailyfocus.domain.model.TaskCategory
+
+/**
+ * Premium Task Item Row.
+ * Features:
+ * - Animated Checkbox (Scale + Color)
+ * - Animated Strike-through
+ * - Elevation drop on completion
+ * - Tonal background shift
+ */
+@Composable
+fun DailyFocusTaskItem(
+    title: String,
+    isCompleted: Boolean,
+    category: TaskCategory?,
+    isRecurring: Boolean = false,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Animation States
+    val elevation by animateDpAsState(
+        targetValue = if (isCompleted) Elevation.Level0 else Elevation.Level1,
+        label = "elevation"
+    )
+    
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isCompleted) 
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) 
+        else 
+            MaterialTheme.colorScheme.surface,
+        label = "background"
+    )
+
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isCompleted) 0.6f else 1.0f,
+        label = "alpha"
+    )
+
+    val checkScale by animateFloatAsState(
+        targetValue = if (isCompleted) 1.1f else 1.0f,
+        label = "scale"
+    )
+
+    Surface(
+        onClick = onToggle,
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(contentAlpha),
+        shape = RoundedCornerShape(Radius.medium),
+        color = backgroundColor,
+        tonalElevation = elevation,
+        shadowElevation = elevation
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(vertical = Spacing.m, horizontal = Spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            // Animated Checkbox
+            CircularCheckbox(
+                checked = isCompleted,
+                modifier = Modifier.scale(checkScale)
+            )
+
+            // Content
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                if (category != null || isRecurring) {
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                         if (isRecurring) {
+                            Icon(
+                                imageVector = Icons.Default.Repeat,
+                                contentDescription = "Recurring",
+                                modifier = Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        if (category != null) {
+                            Text(
+                                text = category.name.lowercase().replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = when(category) {
+                                    TaskCategory.OFFICE -> MaterialTheme.colorScheme.primary
+                                    TaskCategory.PERSONAL -> MaterialTheme.colorScheme.secondary
+                                    else -> MaterialTheme.colorScheme.tertiary
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CircularCheckbox(
+    checked: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+         targetValue = if (checked) MaterialTheme.colorScheme.primary else Color.Transparent,
+         label = "checkboxBg"
+    )
+    
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+        label = "checkboxBorder"
+    )
+
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .background(backgroundColor, CircleShape)
+            .then(
+                if (!checked) Modifier.border(2.dp, borderColor, CircleShape) else Modifier
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (checked) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+

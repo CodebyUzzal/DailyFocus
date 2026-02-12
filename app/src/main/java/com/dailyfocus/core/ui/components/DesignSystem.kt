@@ -13,38 +13,7 @@ import androidx.compose.ui.unit.Dp
 import com.dailyfocus.core.ui.theme.AppShapes
 import com.dailyfocus.core.ui.theme.Elevation
 
-/**
- * Premium Card with consistent elevation and shape.
- * defaulted to Surface color, with optional onclick.
- */
-@Composable
-fun DailyFocusCard(
-    modifier: Modifier = Modifier,
-    shape: Shape = AppShapes.Large,
-    elevation: Dp = Elevation.Level1,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
-    if (onClick != null) {
-        Card(
-            onClick = onClick,
-            modifier = modifier,
-            shape = shape,
-            colors = CardDefaults.cardColors(containerColor = containerColor),
-            elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-            content = { Box(modifier = Modifier.fillMaxSize()) { content() } } // simplified content
-        )
-    } else {
-        Card(
-            modifier = modifier,
-            shape = shape,
-            colors = CardDefaults.cardColors(containerColor = containerColor),
-            elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-            content = { Box(modifier = Modifier) { content() } }
-        )
-    }
-}
+// DailyFocusCard moved to its own file in com.dailyfocus.core.ui.components.DailyFocusCard.kt
 
 /**
  * Premium Scaffold wrapper that handles the background gradient logic if needed,

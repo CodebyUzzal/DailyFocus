@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
 import com.dailyfocus.core.ui.components.EmptyState
+import com.dailyfocus.core.ui.theme.Elevation
 import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.domain.model.HistoryItem
 import java.time.LocalDate
@@ -66,7 +67,7 @@ fun HistoryScreen(
             ) {
                 state.historyItems.forEach { (date, items) ->
                     stickyHeader {
-                        DateHeader(date)
+                        DateHeader(date, items.size)
                     }
                     items(items) { item ->
                         HistoryItemRow(item)
@@ -78,20 +79,33 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun DateHeader(date: LocalDate) {
+private fun DateHeader(date: LocalDate, count: Int) {
     Surface(
-        color = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.surface, // Background for sticky header
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = Elevation.Level2,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(
-                horizontal = Spacing.m,
-                vertical = Spacing.s
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.m, vertical = Spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
             )
-        )
+            
+            Text(
+                text = "$count entries",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     }
 }
 
