@@ -6,6 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +33,7 @@ import java.time.format.FormatStyle
 import com.dailyfocus.presentation.navigation.Destinations
 import androidx.compose.material.icons.filled.List
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LogScreen(
     onNavigateToHistory: () -> Unit,
@@ -44,30 +50,65 @@ fun LogScreen(
         }
     }
 
-    // Calculate insights from entries (UI logic only)
-    val totalMinutes = remember(state.entries) { state.entries.sumOf { it.durationMinutes } }
-    val entryCount = state.entries.size
+    // Group entries by date
+    val groupedEntries = remember(state.entries) {
+        state.entries.groupBy { it.date }
+    }
 
     DailyFocusScaffold(
         topBar = {
-             Row(
-                 modifier = Modifier
-                     .fillMaxWidth()
-                     .padding(top = Spacing.l, start = Spacing.m, end = Spacing.m, bottom = Spacing.m),
-                 horizontalArrangement = Arrangement.SpaceBetween,
-                 verticalAlignment = Alignment.CenterVertically
-             ) {
-                 Text(
-                     text = "History", 
-                     style = MaterialTheme.typography.headlineLarge,
-                     color = MaterialTheme.colorScheme.primary
-                 )
-                 IconButton(onClick = onNavigateToHistory) {
-                     Icon(
-                         imageVector = Icons.Default.List,
-                         contentDescription = "Full History",
-                         tint = MaterialTheme.colorScheme.onSurfaceVariant
+             Column(modifier = Modifier.padding(top = Spacing.l, bottom = Spacing.s)) {
+                 Row(
+                     modifier = Modifier
+                         .fillMaxWidth()
+                         .padding(horizontal = Spacing.m),
+                     horizontalArrangement = Arrangement.SpaceBetween,
+                     verticalAlignment = Alignment.CenterVertically
+                 ) {
+                     Text(
+                         text = "Journal", 
+                         style = MaterialTheme.typography.headlineLarge,
+                         color = MaterialTheme.colorScheme.primary
                      )
+                     // Stats Summary Mini (Total Hours)
+                     Surface(
+                         shape = RoundedCornerShape(16.dp),
+                         color = MaterialTheme.colorScheme.surfaceVariant
+                     ) {
+                         Row(
+                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                             verticalAlignment = Alignment.CenterVertically
+                         ) {
+                             Icon(Icons.Default.Schedule, null, modifier = Modifier.size(16.dp))
+                             Spacer(modifier = Modifier.width(6.dp))
+                             Text(
+                                 text = formatDuration(state.entries.sumOf { it.durationMinutes }),
+                                 style = MaterialTheme.typography.labelLarge
+                             )
+                         }
+                     }
+                 }
+                 
+                 // Filter Chips
+                 Row(
+                     modifier = Modifier
+                         .fillMaxWidth()
+                         .horizontalScroll(rememberScrollState())
+                         .padding(horizontal = Spacing.m, vertical = Spacing.s),
+                     horizontalArrangement = Arrangement.spacedBy(8.dp)
+                 ) {
+                     FilterChip(
+                         selected = state.filter == null,
+                         onClick = { viewModel.onFilterChanged(null) },
+                         label = { Text("All") }
+                     )
+                     com.dailyfocus.domain.model.LogType.entries.forEach { type ->
+                        FilterChip(
+                            selected = state.filter == type,
+                            onClick = { viewModel.onFilterChanged(type) },
+                            label = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                        )
+                     }
                  }
              }
         },
@@ -90,8 +131,8 @@ fun LogScreen(
                 contentAlignment = Alignment.Center
             ) {
                 EmptyState(
-                    message = "No time logged yet.",
-                    subMessage = "Track your focus sessions.",
+                    message = "No journal entries.",
+                    subMessage = "Log your focus sessions or habits.",
                     icon = Icons.Default.Schedule
                 )
             }
@@ -103,62 +144,34 @@ fun LogScreen(
                 contentPadding = PaddingValues(bottom = Spacing.maximize),
                 verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                // Dashboard Summary
-                item {
-                    DailyFocusCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.m),
-                        elevation = Elevation.Level0,
-                        shape = AppShapes.Large,
-                        onClick = {} // Non-clickable
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spacing.l),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically
+                groupedEntries.forEach { (date, entries) ->
+                    stickyHeader {
+                        Surface(
+                            color = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = formatDuration(totalMinutes),
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "Total Focus",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "$entryCount",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                                Text(
-                                    text = "Sessions",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                             Column(modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)) {
+                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                     Text(
+                                        text = if (date == java.time.LocalDate.now()) "Today" else date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                     )
+                                     Spacer(modifier = Modifier.weight(1f))
+                                     Text(
+                                         text = formatDuration(entries.sumOf { it.durationMinutes }),
+                                         style = MaterialTheme.typography.labelMedium,
+                                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                                     )
+                                 }
+                                 Divider(modifier = Modifier.padding(top = Spacing.xs))
+                             }
                         }
                     }
-                }
 
-                item {
-                    Text(
-                        text = "Recent Entries",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                items(state.entries, key = { it.id }) { entry ->
-                    LogEntryCard(entry = entry, onDelete = { viewModel.onDeleteEntry(entry.id) })
+                    items(entries, key = { it.id }) { entry ->
+                        LogEntryCard(entry = entry, onDelete = { viewModel.onDeleteEntry(entry.id) })
+                    }
                 }
             }
         }
@@ -167,8 +180,8 @@ fun LogScreen(
     if (showAddDialog) {
         AddLogDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { activity, duration, note ->
-                viewModel.onAddEntry(activity, duration, note)
+            onConfirm = { activity, duration, type, note ->
+                viewModel.onAddEntry(activity, duration, type, note)
                 showAddDialog = false
             }
         )
@@ -190,6 +203,28 @@ private fun LogEntryCard(entry: DailyLogEntry, onDelete: () -> Unit) {
                 .padding(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Type Icon
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = when(entry.type) {
+                            com.dailyfocus.domain.model.LogType.FOCUS -> Icons.Default.Schedule
+                            com.dailyfocus.domain.model.LogType.HABIT -> Icons.Default.LocalFireDepartment /* Or similar */
+                            com.dailyfocus.domain.model.LogType.TASK -> Icons.Default.Check
+                        },
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(Spacing.m))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = entry.activityName,
@@ -197,32 +232,22 @@ private fun LogEntryCard(entry: DailyLogEntry, onDelete: () -> Unit) {
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                    modifier = Modifier.padding(top = Spacing.xxs)
+                    modifier = Modifier.padding(top = Spacing.xxs),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Schedule,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.xxs))
-                        Text(
-                            text = formatDuration(entry.durationMinutes),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = formatDuration(entry.durationMinutes),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                     Text(
                         text = "•",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = entry.date.format(
-                            DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
+                     Text(
+                        text = entry.type.name.lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -258,11 +283,12 @@ private fun formatDuration(minutes: Int): String {
 @Composable
 private fun AddLogDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, Int, String?) -> Unit
+    onConfirm: (String, Int, com.dailyfocus.domain.model.LogType, String?) -> Unit
 ) {
     var activity by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(com.dailyfocus.domain.model.LogType.FOCUS) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -276,6 +302,17 @@ private fun AddLogDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                     com.dailyfocus.domain.model.LogType.entries.forEach { type ->
+                        FilterChip(
+                            selected = selectedType == type,
+                            onClick = { selectedType = type },
+                            label = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                        )
+                     }
+                }
+
                 OutlinedTextField(
                     value = duration,
                     onValueChange = { duration = it.filter { c -> c.isDigit() } },
@@ -297,7 +334,7 @@ private fun AddLogDialog(
                 onClick = {
                     val dur = duration.toIntOrNull() ?: 0
                     if (activity.isNotBlank() && dur > 0) {
-                        onConfirm(activity, dur, note.ifBlank { null })
+                        onConfirm(activity, dur, selectedType, note.ifBlank { null })
                     }
                 },
                 enabled = activity.isNotBlank() && (duration.toIntOrNull() ?: 0) > 0

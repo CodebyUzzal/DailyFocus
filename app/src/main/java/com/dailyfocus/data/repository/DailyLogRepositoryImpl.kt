@@ -34,10 +34,10 @@ class DailyLogRepositoryImpl @Inject constructor(
 
 private fun DailyLogEntryEntity.toDomain() = DailyLogEntry(
     id = id, activityName = activityName, durationMinutes = durationMinutes,
-    note = note, date = date, createdAt = createdAt
+    type = type, note = note, date = date, createdAt = createdAt
 )
 
 private fun DailyLogEntry.toEntity() = DailyLogEntryEntity(
     id = id, activityName = activityName, durationMinutes = durationMinutes,
-    note = note, date = date, createdAt = createdAt
+    type = type, note = note, date = date, createdAt = createdAt
 )

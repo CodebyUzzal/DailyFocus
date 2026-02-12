@@ -12,8 +12,12 @@ import javax.inject.Inject
 class AddEditGoalUseCase @Inject constructor(
     private val repository: GoalRepository
 ) {
-    suspend fun addGoal(title: String, type: GoalType = GoalType.INFINITE): Long {
-        return repository.insertGoal(Goal(title = title, type = type))
+    suspend fun addGoal(
+        title: String,
+        type: GoalType = GoalType.INFINITE,
+        deadline: java.time.LocalDate? = null
+    ): Long {
+        return repository.insertGoal(Goal(title = title, type = type, deadline = deadline))
     }
 
     suspend fun updateGoal(goal: Goal) {

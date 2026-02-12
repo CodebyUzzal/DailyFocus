@@ -38,11 +38,11 @@ class TodayTaskRepositoryImpl @Inject constructor(
 private fun TodayTaskEntity.toDomain() = TodayTask(
     id = id, title = title, category = category,
     date = date, isCompleted = isCompleted,
-    recurringTaskId = recurringTaskId, createdAt = createdAt
+    recurringTaskId = recurringTaskId, note = note, createdAt = createdAt
 )
 
 private fun TodayTask.toEntity() = TodayTaskEntity(
     id = id, title = title, category = category,
     date = date, isCompleted = isCompleted,
-    recurringTaskId = recurringTaskId, createdAt = createdAt
+    recurringTaskId = recurringTaskId, note = note, createdAt = createdAt
 )

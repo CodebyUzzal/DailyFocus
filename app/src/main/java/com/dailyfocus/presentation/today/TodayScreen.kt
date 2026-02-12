@@ -100,6 +100,7 @@ fun TodayScreen(
                                 progress = progress,
                                 taskCount = totalTasks,
                                 completedCount = completedTasks,
+                                focusMinutes = state.todayFocusMinutes,
                                 modifier = Modifier.weight(1f)
                             )
                             
@@ -165,6 +166,8 @@ fun TodayScreen(
                                 isCompleted = task.isCompleted,
                                 category = task.category,
                                 isRecurring = task.recurringTaskId != null,
+                                note = task.note,
+                                showCategory = state.categoryFilter == null,
                                 onToggle = { viewModel.onToggleTodayTask(task) },
                                 modifier = Modifier.padding(horizontal = Spacing.m, vertical = 4.dp)
                             )
@@ -218,6 +221,8 @@ fun TodayScreen(
                                     isCompleted = task.isCompleted,
                                     category = task.category,
                                     isRecurring = task.recurringTaskId != null,
+                                    note = task.note,
+                                    showCategory = state.categoryFilter == null,
                                     onToggle = { viewModel.onToggleTodayTask(task) },
                                     modifier = Modifier
                                         .padding(horizontal = Spacing.m, vertical = 4.dp)
@@ -239,8 +244,8 @@ fun TodayScreen(
     if (showAddDialog) {
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { title, category ->
-                viewModel.onAddTask(title, category)
+            onConfirm = { title, category, note ->
+                viewModel.onAddTask(title, category, note)
                 showAddDialog = false
             },
             defaultCategory = state.categoryFilter ?: TaskCategory.PERSONAL,

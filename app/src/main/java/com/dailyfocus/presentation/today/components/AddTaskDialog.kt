@@ -15,11 +15,12 @@ import com.dailyfocus.domain.model.TaskCategory
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onConfirm: (title: String, category: TaskCategory) -> Unit,
+    onConfirm: (title: String, category: TaskCategory, note: String?) -> Unit,
     defaultCategory: TaskCategory = TaskCategory.PERSONAL,
     dialogTitle: String = "Add Task"
 ) {
     var title by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(defaultCategory) }
 
     ModalBottomSheet(
@@ -32,9 +33,10 @@ fun AddTaskDialog(
         ) {
             Text(
                 text = dialogTitle,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
+                style = MaterialTheme.typography.titleLarge
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = title,
@@ -42,6 +44,16 @@ fun AddTaskDialog(
                 label = { Text("Task title") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text("Note (optional)") },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -77,7 +89,7 @@ fun AddTaskDialog(
                 Button(
                     onClick = {
                         if (title.isNotBlank()) {
-                            onConfirm(title, selectedCategory)
+                            onConfirm(title, selectedCategory, note.ifBlank { null })
                         }
                     },
                     enabled = title.isNotBlank()
@@ -85,7 +97,6 @@ fun AddTaskDialog(
                     Text("Add")
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

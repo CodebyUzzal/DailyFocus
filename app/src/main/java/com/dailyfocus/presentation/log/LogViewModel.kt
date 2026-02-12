@@ -13,6 +13,7 @@ import javax.inject.Inject
 
 data class LogUiState(
     val entries: List<DailyLogEntry> = emptyList(),
+    val filter: com.dailyfocus.domain.model.LogType? = null,
     val isLoading: Boolean = true,
     val userMessage: UiMessage? = null
 )
@@ -27,15 +28,26 @@ class LogViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LogUiState())
     val uiState: StateFlow<LogUiState> = _uiState.asStateFlow()
 
+    private val _filter = MutableStateFlow<com.dailyfocus.domain.model.LogType?>(null)
+
     init {
         viewModelScope.launch {
-            getDailyLogs().collect { entries ->
-                _uiState.update { it.copy(entries = entries, isLoading = false) }
+            combine(getDailyLogs(), _filter) { entries, filterType ->
+                // Sort by date descending, then created at descending
+                val sorted = entries.sortedWith(compareByDescending<DailyLogEntry> { it.date }.thenByDescending { it.createdAt })
+                if (filterType == null) sorted else sorted.filter { it.type == filterType }
+            }.collect { filteredEntries ->
+                _uiState.update { it.copy(entries = filteredEntries, isLoading = false) }
             }
         }
     }
 
-    fun onAddEntry(activityName: String, durationMinutes: Int, note: String?) {
+    fun onFilterChanged(type: com.dailyfocus.domain.model.LogType?) {
+        _filter.value = type
+        _uiState.update { it.copy(filter = type) }
+    }
+
+    fun onAddEntry(activityName: String, durationMinutes: Int, type: com.dailyfocus.domain.model.LogType, note: String?) {
         if (activityName.isBlank() || durationMinutes <= 0) return
         viewModelScope.launch {
             try {
@@ -43,6 +55,7 @@ class LogViewModel @Inject constructor(
                     DailyLogEntry(
                         activityName = activityName.trim(),
                         durationMinutes = durationMinutes,
+                        type = type,
                         note = note?.trim()?.ifBlank { null },
                         date = DateUtils.today()
                     )

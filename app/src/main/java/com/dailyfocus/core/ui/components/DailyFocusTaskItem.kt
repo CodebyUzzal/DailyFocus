@@ -53,6 +53,8 @@ fun DailyFocusTaskItem(
     isCompleted: Boolean,
     category: TaskCategory?,
     isRecurring: Boolean = false,
+    note: String? = null,
+    showCategory: Boolean = true,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -112,7 +114,8 @@ fun DailyFocusTaskItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                if (category != null || isRecurring) {
+                // Secondary Row: Note + Metadata
+                if (!note.isNullOrBlank() || isRecurring || (category != null && showCategory)) {
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -122,12 +125,28 @@ fun DailyFocusTaskItem(
                             Icon(
                                 imageVector = Icons.Default.Repeat,
                                 contentDescription = "Recurring",
-                                modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+
+                        if (!note.isNullOrBlank()) {
+                            Text(
+                                text = note,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                         }
                         
-                        if (category != null) {
+                        // Category Tag (only if enabled)
+                        if (category != null && showCategory) {
+                             // Add separator if we have other content
+                             if (!note.isNullOrBlank() || isRecurring) {
+                                 Text("•", style = MaterialTheme.typography.bodySmall)
+                             }
+                             
                             Text(
                                 text = category.name.lowercase().replaceFirstChar { it.uppercase() },
                                 style = MaterialTheme.typography.bodySmall,

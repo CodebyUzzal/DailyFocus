@@ -9,5 +9,6 @@ data class Goal(
     val id: Long = 0,
     val title: String,
     val type: GoalType = GoalType.INFINITE,
+    val deadline: java.time.LocalDate? = null,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

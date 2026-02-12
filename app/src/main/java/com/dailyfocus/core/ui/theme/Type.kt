@@ -78,7 +78,32 @@ val DailyFocusTypography = Typography(
 
 fun getScaledTypography(scale: Float): Typography {
     if (scale == 1.0f) return DailyFocusTypography
-    
-    // Simple scaling implementation if needed in future
-    return DailyFocusTypography
+
+    val constrainedScale = scale.coerceIn(0.85f, 1.30f)
+
+    return Typography(
+        displayLarge = DailyFocusTypography.displayLarge.scale(constrainedScale),
+        displayMedium = DailyFocusTypography.displayMedium.scale(constrainedScale),
+        displaySmall = DailyFocusTypography.displaySmall.scale(constrainedScale),
+        headlineLarge = DailyFocusTypography.headlineLarge.scale(constrainedScale),
+        headlineMedium = DailyFocusTypography.headlineMedium.scale(constrainedScale),
+        headlineSmall = DailyFocusTypography.headlineSmall.scale(constrainedScale),
+        titleLarge = DailyFocusTypography.titleLarge.scale(constrainedScale),
+        titleMedium = DailyFocusTypography.titleMedium.scale(constrainedScale),
+        titleSmall = DailyFocusTypography.titleSmall.scale(constrainedScale),
+        bodyLarge = DailyFocusTypography.bodyLarge.scale(constrainedScale),
+        bodyMedium = DailyFocusTypography.bodyMedium.scale(constrainedScale),
+        bodySmall = DailyFocusTypography.bodySmall.scale(constrainedScale),
+        labelLarge = DailyFocusTypography.labelLarge.scale(constrainedScale),
+        labelMedium = DailyFocusTypography.labelMedium.scale(constrainedScale),
+        labelSmall = DailyFocusTypography.labelSmall.scale(constrainedScale)
+    )
+}
+
+private fun TextStyle.scale(scale: Float): TextStyle {
+    return this.copy(
+        fontSize = this.fontSize * scale,
+        lineHeight = this.lineHeight * scale,
+        letterSpacing = this.letterSpacing * scale
+    )
 }

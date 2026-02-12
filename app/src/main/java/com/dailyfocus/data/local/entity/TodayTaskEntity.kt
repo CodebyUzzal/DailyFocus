@@ -18,5 +18,6 @@ data class TodayTaskEntity(
     val date: LocalDate,
     val isCompleted: Boolean = false,
     val recurringTaskId: Long? = null,
+    val note: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

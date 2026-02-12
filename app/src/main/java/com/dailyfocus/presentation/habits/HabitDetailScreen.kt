@@ -1,6 +1,7 @@
 package com.dailyfocus.presentation.habits
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -11,7 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.presentation.habits.components.CalendarHeatmap
+import com.dailyfocus.presentation.habits.components.HeroStreakCard
+import com.dailyfocus.presentation.habits.components.InsightRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,73 +46,46 @@ fun HabitDetailScreen(
                 CircularProgressIndicator()
             }
         } else {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp), // Initial padding
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                state.habit?.let { habitWithStreak ->
-                    // Streak cards
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        StreakCard(
-                            label = "Current Streak",
-                            value = habitWithStreak.currentStreak,
-                            modifier = Modifier.weight(1f)
+                item {
+                    state.habit?.let { habitWithStreak ->
+                        // 1. Hero Streak
+                        HeroStreakCard(
+                            currentStreak = habitWithStreak.currentStreak,
+                            longestStreak = habitWithStreak.longestStreak,
+                            modifier = Modifier.padding(horizontal = Spacing.m)
                         )
-                        StreakCard(
-                            label = "Longest Streak",
-                            value = habitWithStreak.longestStreak,
-                            modifier = Modifier.weight(1f)
+                        
+                        Spacer(modifier = Modifier.height(Spacing.l))
+
+                        // 2. Insight Row
+                        InsightRow(
+                            completionRate = state.completionRate,
+                            currentWeekCount = state.currentWeekCount,
+                            totalLogs = state.totalLogs,
+                            modifier = Modifier.padding(horizontal = Spacing.m)
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Calendar heatmap
-                    CalendarHeatmap(completedDates = state.completedDates)
+                item {
+                    state.habit?.let {
+                        // 3. Calendar heatmap
+                        com.dailyfocus.presentation.habits.components.CalendarHeatmap(
+                            completedDates = state.completedDates,
+                            modifier = Modifier.padding(bottom = 96.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun StreakCard(
-    label: String,
-    value: Int,
-    modifier: Modifier = Modifier
-) {
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                Icons.Default.LocalFireDepartment,
-                contentDescription = null,
-                tint = if (value > 0)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "$value",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
+

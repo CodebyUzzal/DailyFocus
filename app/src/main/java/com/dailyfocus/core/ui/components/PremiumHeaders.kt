@@ -22,6 +22,10 @@ import com.dailyfocus.core.ui.theme.GradientHeaderEnd
 import com.dailyfocus.core.ui.theme.GradientHeaderStart
 import com.dailyfocus.core.ui.theme.Spacing
 
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.ui.unit.sp
+
 @Composable
 fun CompactGreetingHeader(
     username: String,
@@ -29,22 +33,13 @@ fun CompactGreetingHeader(
     progress: Float,
     taskCount: Int,
     completedCount: Int,
+    focusMinutes: Int,
     modifier: Modifier = Modifier
 ) {
     val visible = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         visible.value = true
-    }
-
-    // Time-based greeting
-    val greeting = remember {
-        val hour = java.time.LocalTime.now().hour
-        when {
-            hour < 12 -> "Good Morning,"
-            hour < 17 -> "Good Afternoon,"
-            else -> "Good Evening,"
-        }
     }
 
     val remainingCount = taskCount - completedCount
@@ -57,50 +52,81 @@ fun CompactGreetingHeader(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.m, vertical = Spacing.l),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                .padding(horizontal = Spacing.m, vertical = Spacing.m), // Reduced vertical padding
+            verticalArrangement = Arrangement.spacedBy(Spacing.s)
         ) {
-            // Row 1: Greeting + Date
+            // Row 1: Date and Greeting
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
-                        text = greeting,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = date.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
                     Text(
-                        text = username,
-                        style = MaterialTheme.typography.displayLarge,
+                        text = "Hello, $username",
+                        style = MaterialTheme.typography.headlineSmall, // Smaller than displayLarge
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(bottom = 4.dp) // Align with baseline
-                )
             }
-            
-            Spacer(modifier = Modifier.height(Spacing.xs))
 
-            // Row 2: Progress Bar
+            // Row 2: Progress Strip
             PremiumProgressBar(
                 progress = progress,
-                height = 6.dp,
-                modifier = Modifier.fillMaxWidth()
+                height = 4.dp, // Thinner
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
             )
 
-            // Row 3: Summary text
-            Text(
-                text = "$taskCount Tasks • $completedCount Completed • $remainingCount Remaining",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Row 3: Stats Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Tasks Left
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.CheckBoxOutlineBlank,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "$remainingCount left",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(Spacing.l))
+
+                // Focus Time
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.AccessTime,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val h = focusMinutes / 60
+                    val m = focusMinutes % 60
+                    val timeText = if (h > 0) "${h}h ${m}m" else "${m}m"
+                    Text(
+                        text = "$timeText focus",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }

@@ -3,8 +3,11 @@ package com.dailyfocus.presentation.goals.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -33,7 +36,7 @@ fun GoalCard(
     modifier: Modifier = Modifier
 ) {
     val goal = goalWithProgress.goal
-    var expanded by remember { mutableStateOf(false) } // Default collapsed for cleaner look? Or expanded? existing was true. Let's start collapsed to save space if many goals.
+    var expanded by remember { mutableStateOf(false) }
     var showAddItem by remember { mutableStateOf(false) }
     var newItemTitle by remember { mutableStateOf("") }
 
@@ -42,79 +45,125 @@ fun GoalCard(
         elevation = Elevation.Level1
     ) {
         Column(modifier = Modifier.padding(Spacing.m)) {
-            // Header
+            // ── Header Area ─────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Progress Ring
-                PremiumCircularProgress(
-                    progress = goalWithProgress.progressPercent / 100f,
-                    size = 48.dp,
-                    color = if (goalWithProgress.progressPercent >= 100f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                )
-                
+                // Progress Indicator
+                Box(contentAlignment = Alignment.Center) {
+                    PremiumCircularProgress(
+                        progress = goalWithProgress.progressPercent / 100f,
+                        size = 56.dp, // Slightly larger
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Text(
+                        text = "${goalWithProgress.progressPercent.toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 Spacer(modifier = Modifier.width(Spacing.m))
 
+                // Title & Metadata
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = goal.title,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                        modifier = Modifier.padding(top = Spacing.xxs)
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
-                        AssistChip(
-                            onClick = {},
-                            label = {
+                        // Type Badge
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.height(20.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 6.dp)) {
                                 Text(
-                                    goal.type.name.lowercase().replaceFirstChar { it.uppercase() },
-                                    style = MaterialTheme.typography.labelSmall
+                                    text = goal.type.name.lowercase().replaceFirstChar { it.uppercase() },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            },
-                            modifier = Modifier.height(24.dp)
-                        )
-                        Text(
-                            text = "${goalWithProgress.completedCount}/${goalWithProgress.totalCount} completed",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                            }
+                        }
+
+                        // Deadline (if exists)
+                        goal.deadline?.let { deadline ->
+                            Text("•", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = deadline.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.SHORT)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
-                
+
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        "Toggle items",
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = "Toggle items",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = onDeleteGoal) {
-                    Icon(
-                        Icons.Default.Delete,
-                        "Delete goal",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
             }
-
-            // Items
+            
+            // ── Milestones Section ──────────────────────────────────────────
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = Spacing.m)) {
-                    goalWithProgress.items.forEach { item ->
-                        GoalItemRow(item = item, onToggle = { onToggleItem(item) })
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(Spacing.s))
+
+                    // Active Items
+                    val activeItems = goalWithProgress.items.filter { !it.isCompleted }
+                    if (activeItems.isNotEmpty()) {
+                        Text(
+                            text = "Active Milestones",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = Spacing.xs)
+                        )
+                        activeItems.forEach { item ->
+                            GoalItemRow(item = item, onToggle = { onToggleItem(item) })
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.m))
                     }
 
-                    // Add item inline
+                    // Completed Items
+                    val completedItems = goalWithProgress.items.filter { it.isCompleted }
+                    if (completedItems.isNotEmpty()) {
+                        Text(
+                            text = "Completed",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(bottom = Spacing.xs)
+                        )
+                        completedItems.forEach { item ->
+                            GoalItemRow(item = item, onToggle = { onToggleItem(item) })
+                        }
+                         Spacer(modifier = Modifier.height(Spacing.m))
+                    }
+
+                    // Add New Item Input
                     if (showAddItem) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = Spacing.s),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
                                 value = newItemTitle,
@@ -124,23 +173,40 @@ fun GoalCard(
                                 singleLine = true,
                                 textStyle = MaterialTheme.typography.bodyMedium
                             )
-                            Spacer(modifier = Modifier.width(Spacing.xs))
-                            TextButton(onClick = {
+                            IconButton(onClick = {
                                 if (newItemTitle.isNotBlank()) {
                                     onAddItem(newItemTitle)
                                     newItemTitle = ""
-                                    showAddItem = false
+                                    // Keep input open for rapid entry
                                 }
-                            }) { Text("Add") }
+                            }) {
+                                Icon(Icons.Default.Add, "Add", tint = MaterialTheme.colorScheme.primary)
+                            }
+                            IconButton(onClick = { showAddItem = false }) {
+                                Icon(Icons.Default.Close, "Cancel", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     } else {
                         TextButton(
                             onClick = { showAddItem = true },
-                            modifier = Modifier.padding(top = Spacing.xs)
+                            contentPadding = PaddingValues(0.dp)
                         ) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(Spacing.xs))
-                            Text("Add milestone")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Add Milestone")
+                        }
+                    }
+                    
+                    // Delete Goal (moved to bottom of expanded for safety)
+                    Spacer(modifier = Modifier.height(Spacing.m))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(
+                            onClick = onDeleteGoal,
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                             Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
+                             Spacer(modifier = Modifier.width(4.dp))
+                             Text("Delete Goal")
                         }
                     }
                 }
@@ -151,25 +217,21 @@ fun GoalCard(
 
 @Composable
 private fun GoalItemRow(item: GoalItem, onToggle: () -> Unit) {
-    val textColor by animateColorAsState(
-        targetValue = if (item.isCompleted)
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        else
-            MaterialTheme.colorScheme.onSurface,
-        label = "goalItemColor",
-        animationSpec = AnimationConstants.fastTween()
-    )
-
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xxs),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        PremiumCheckbox(checked = item.isCompleted, onCheckedChange = { onToggle() })
-        Spacer(modifier = Modifier.width(Spacing.xs))
+        PremiumCheckbox(
+            checked = item.isCompleted,
+            onCheckedChange = { onToggle() }
+        )
+        Spacer(modifier = Modifier.width(Spacing.s))
         Text(
             text = item.title,
             style = MaterialTheme.typography.bodyMedium,
-            color = textColor,
+            color = if (item.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null
         )
     }

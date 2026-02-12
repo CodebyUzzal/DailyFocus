@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Flag
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
 import com.dailyfocus.core.ui.components.EmptyState
@@ -101,8 +102,8 @@ fun GoalsScreen(
     if (showAddDialog) {
         AddGoalDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { title, type ->
-                viewModel.onAddGoal(title, type)
+            onConfirm = { title, type, deadline ->
+                viewModel.onAddGoal(title, type, deadline)
                 showAddDialog = false
             }
         )
@@ -111,13 +112,38 @@ fun GoalsScreen(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddGoalDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, GoalType) -> Unit
+    onConfirm: (String, GoalType, java.time.LocalDate?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(GoalType.MONTHLY) }
+    var deadline by remember { mutableStateOf<java.time.LocalDate?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        deadline = java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -131,6 +157,7 @@ private fun AddGoalDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                
                 Text("Type", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     GoalType.entries.forEach { type ->
@@ -141,11 +168,30 @@ private fun AddGoalDialog(
                         )
                     }
                 }
+
+                Divider()
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = deadline?.toString() ?: "No deadline",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.DateRange, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (deadline == null) "Set Deadline" else "Change")
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { if (title.isNotBlank()) onConfirm(title, selectedType) },
+                onClick = { if (title.isNotBlank()) onConfirm(title, selectedType, deadline) },
                 enabled = title.isNotBlank()
             ) { Text("Create") }
         },

@@ -14,6 +14,9 @@ import javax.inject.Inject
 data class HabitDetailUiState(
     val habit: HabitWithStreak? = null,
     val completedDates: Set<LocalDate> = emptySet(),
+    val completionRate: Int = 0,
+    val currentWeekCount: Int = 0,
+    val totalLogs: Int = 0,
     val isLoading: Boolean = true
 )
 
@@ -43,6 +46,19 @@ class HabitDetailViewModel @Inject constructor(
                         allLogDates.contains(start.plusDays(i.toLong()))
                     }
 
+                    // Calculate stats
+                    val totalLogs = allLogDates.size
+                    // Calculate completion rate (last 30 days)
+                    val last30Days = (0..29).map { today.minusDays(it.toLong()) }
+                    val completedLast30 = last30Days.count { allLogDates.contains(it) }
+                    val rate = if (last30Days.isNotEmpty()) (completedLast30 * 100 / 30) else 0
+
+                    // Calculate current week (Monday to Sunday)
+                    val currentDayOfWeek = today.dayOfWeek.value // 1 (Mon) - 7 (Sun)
+                    val startOfWeek = today.minusDays((currentDayOfWeek - 1).toLong())
+                    val currentWeekDates = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+                    val thisWeekCount = currentWeekDates.count { allLogDates.contains(it) }
+
                     _uiState.update {
                         it.copy(
                             habit = HabitWithStreak(
@@ -53,6 +69,9 @@ class HabitDetailViewModel @Inject constructor(
                                 last7Days = history
                             ),
                             completedDates = allLogDates,
+                            completionRate = rate,
+                            currentWeekCount = thisWeekCount,
+                            totalLogs = totalLogs,
                             isLoading = false
                         )
                     }

@@ -17,6 +17,7 @@ data class DailyLogEntry(
     val id: Long = 0,
     val activityName: String,
     val durationMinutes: Int,
+    val type: LogType = LogType.FOCUS,
     val note: String? = null,
     val date: LocalDate,
     val createdAt: LocalDateTime = LocalDateTime.now()

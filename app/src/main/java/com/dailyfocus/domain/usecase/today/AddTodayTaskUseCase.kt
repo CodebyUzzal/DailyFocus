@@ -16,13 +16,15 @@ class AddTodayTaskUseCase @Inject constructor(
     suspend operator fun invoke(
         title: String,
         category: TaskCategory = TaskCategory.PERSONAL,
-        date: LocalDate = DateUtils.today()
+        date: LocalDate = DateUtils.today(),
+        note: String? = null
     ): Long {
         return repository.insert(
             TodayTask(
                 title = title,
                 category = category,
-                date = date
+                date = date,
+                note = note
             )
         )
     }

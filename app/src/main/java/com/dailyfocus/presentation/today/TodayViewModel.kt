@@ -14,16 +14,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for the Today tab.
- * Uses only use cases — no repository access (clean architecture).
- */
 @HiltViewModel
 class TodayViewModel @Inject constructor(
     private val dailyBoundaryManager: DailyBoundaryManager,
     private val getTodayTasks: GetTodayTasksUseCase,
     private val addTodayTask: AddTodayTaskUseCase,
     private val toggleTodayTask: ToggleTodayTaskUseCase,
+    private val getDailyLogs: com.dailyfocus.domain.usecase.log.GetDailyLogsUseCase,
     private val preferences: AppPreferences
 ) : ViewModel() {
 
@@ -51,8 +48,7 @@ class TodayViewModel @Inject constructor(
     }
 
     /**
-     * Observes userName, categoryFilter, and todayTasks.
-     * Combines them cleanly to avoid race conditions and multiple subscriptions.
+     * Observes userName, categoryFilter, todayTasks, and focus logs.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeData() {
@@ -91,6 +87,14 @@ class TodayViewModel @Inject constructor(
                     _uiState.update { it.copy(todayTasks = filteredTasks, isLoading = false) }
                 }
         }
+
+        // 3. Observe Focus Logs for Today
+        viewModelScope.launch {
+            getDailyLogs(today).collect { logs ->
+                val totalMinutes = logs.sumOf { it.durationMinutes }
+                _uiState.update { it.copy(todayFocusMinutes = totalMinutes) }
+            }
+        }
     }
 
     // ── User Actions ────────────────────────────────────────────────────
@@ -107,11 +111,11 @@ class TodayViewModel @Inject constructor(
         }
     }
 
-    fun onAddTask(title: String, category: TaskCategory) {
+    fun onAddTask(title: String, category: TaskCategory, note: String? = null) {
         if (title.isBlank()) return
         viewModelScope.launch {
             try {
-                addTodayTask(title.trim(), category, today)
+                addTodayTask(title.trim(), category, today, note)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to add task: ${e.message}"))

@@ -14,6 +14,7 @@ data class TodayUiState(
     val userName: String = "",
     val todayTasks: List<TodayTask> = emptyList(),
     val categoryFilter: TaskCategory? = null,
+    val todayFocusMinutes: Int = 0,
     val isLoading: Boolean = true,
     val userMessage: UiMessage? = null
 )
