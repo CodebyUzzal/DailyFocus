@@ -79,6 +79,7 @@ fun HabitDetailScreen(
                         // 3. Calendar heatmap
                         com.dailyfocus.presentation.habits.components.CalendarHeatmap(
                             completedDates = state.completedDates,
+                            onDayClick = { date -> viewModel.toggleHabitLog(date) },
                             modifier = Modifier.padding(bottom = 96.dp)
                         )
                     }

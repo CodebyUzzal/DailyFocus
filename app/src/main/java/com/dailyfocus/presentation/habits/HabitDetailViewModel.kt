@@ -3,6 +3,7 @@ package com.dailyfocus.presentation.habits
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dailyfocus.core.util.UiMessage
 import com.dailyfocus.domain.repository.HabitRepository
 import com.dailyfocus.domain.usecase.habits.HabitWithStreak
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ data class HabitDetailUiState(
     val completionRate: Int = 0,
     val currentWeekCount: Int = 0,
     val totalLogs: Int = 0,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val userMessage: UiMessage? = null
 )
 
 @HiltViewModel
@@ -32,6 +34,10 @@ class HabitDetailViewModel @Inject constructor(
     val uiState: StateFlow<HabitDetailUiState> = _uiState.asStateFlow()
 
     init {
+        loadData()
+    }
+
+    private fun loadData() {
         if (habitId > 0) {
             viewModelScope.launch {
                 val habit = habitRepository.getHabitById(habitId)
@@ -80,5 +86,27 @@ class HabitDetailViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun toggleHabitLog(date: LocalDate) {
+        viewModelScope.launch {
+            try {
+                if (_uiState.value.completedDates.contains(date)) {
+                    habitRepository.deleteLog(habitId, date)
+                } else {
+                    habitRepository.insertLog(habitId, date)
+                }
+                // Reload data to refresh stats and streak
+                loadData()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
+                }
+            }
+        }
+    }
+
+    fun onMessageDismissed() {
+        _uiState.update { it.copy(userMessage = null) }
     }
 }
