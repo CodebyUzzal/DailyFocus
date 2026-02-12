@@ -141,6 +141,7 @@ fun CalendarHeatmap(
                             val isMissed = !isFuture && !isDone && !isToday
 
                             HeatmapCell(
+                                modifier = Modifier.weight(1f),
                                 date = date,
                                 isToday = isToday,
                                 isDone = isDone,
@@ -158,6 +159,7 @@ fun CalendarHeatmap(
 
 @Composable
 private fun HeatmapCell(
+    modifier: Modifier = Modifier,
     date: LocalDate,
     isToday: Boolean,
     isDone: Boolean,
@@ -187,8 +189,7 @@ private fun HeatmapCell(
     )
 
     Box(
-        modifier = Modifier
-            .weight(1f)
+        modifier = modifier
             .aspectRatio(1f) // Square cells
             .padding(2.dp)
             .scale(scale)

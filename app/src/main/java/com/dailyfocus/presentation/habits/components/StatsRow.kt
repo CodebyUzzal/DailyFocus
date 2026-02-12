@@ -1,5 +1,11 @@
 package com.dailyfocus.presentation.habits.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -64,12 +70,12 @@ private fun StatCard(
             verticalArrangement = Arrangement.Center
         ) {
             // Value with animation
-            androidx.compose.animation.AnimatedContent(
+            AnimatedContent(
                 targetState = value,
                 label = "statValue",
                 transitionSpec = {
-                    (androidx.compose.animation.slideInVertically { height -> height } + androidx.compose.animation.fadeIn())
-                        .togetherWith(androidx.compose.animation.slideOutVertically { height -> -height } + androidx.compose.animation.fadeOut())
+                    (slideInVertically { height -> height } + fadeIn())
+                        .togetherWith(slideOutVertically { height -> -height } + fadeOut())
                 }
             ) { targetValue ->
                Text(
