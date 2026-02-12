@@ -1,35 +1,39 @@
 package com.dailyfocus.presentation.habits.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.dailyfocus.core.ui.theme.*
+import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.YearMonth
 import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.Locale
 
 /**
  * Premium Calendar Heatmap.
- * Features:
- * - Chronological Grid (Oldest -> Newest)
- * - Tonal Intensity Scale (Simulated via opacity for now, extensible)
- * - Month Indicators
- * - Premium Visuals
+ *
+ * Visual hierarchy:
+ * - Card (Surface 2)
+ * - Header (Month Label + Legend)
+ * - Days Row (M T W T F S S)
+ * - Grid (Weeks)
  */
 @Composable
 fun CalendarHeatmap(
@@ -38,43 +42,60 @@ fun CalendarHeatmap(
     modifier: Modifier = Modifier
 ) {
     val today = LocalDate.now()
-    // Show last 14 weeks (approx 98 days) to ensure full rows
-    val daysToShow = 7 * 14
-    val startDate = today.minusDays((daysToShow - 1).toLong())
+    // Show 3 months including current
+    val currentMonth = YearMonth.from(today)
+    val startMonth = currentMonth.minusMonths(2)
     
-    // Group days by week
-    val weeks = remember(completedDates) {
-        (0 until daysToShow).map { startDate.plusDays(it.toLong()) }.chunked(7)
-    }
+    // We want to show full weeks for these months
+    val firstDayOfStartMonth = startMonth.atDay(1)
+    // Adjust to start on Monday (or locale specific, checking logic)
+    // Using ISO-8601 (Monday start) for consistency with "M T W..." labels
+    val firstDayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek
+    val dayOfWeekOffset = (firstDayOfStartMonth.dayOfWeek.value - firstDayOfWeek.value + 7) % 7
+    val startDate = firstDayOfStartMonth.minusDays(dayOfWeekOffset.toLong())
 
-    Surface(
+    // Calculate end date (end of current month + rest of week)
+    val endOfMonth = currentMonth.atEndOfMonth()
+    val endDayOffset = (7 - (endOfMonth.dayOfWeek.value - firstDayOfWeek.value + 1) + 7) % 7
+    val endDate = endOfMonth.plusDays(endDayOffset.toLong())
+
+    val daysToShow = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1
+    val weeks = (0 until daysToShow).map { startDate.plusDays(it) }.chunked(7)
+
+    Card(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface, // Surface 2 via tonal elevation
-        tonalElevation = 2.dp
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header with Legend
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Consistency",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Consistency", // Changed from "History" to match "Header" requirement in Phase 5
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                // Premium Legend
+                
+                // Legend
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                     LegendDot(color = MaterialTheme.colorScheme.surfaceVariant, label = "Missed")
-                     LegendDot(color = MaterialTheme.colorScheme.primary, label = "Done")
+                    LegendItem(color = MaterialTheme.colorScheme.primary, label = "Done")
+                    LegendItem(color = MaterialTheme.colorScheme.errorContainer, label = "Missed")
+                    LegendItem(color = MaterialTheme.colorScheme.surfaceContainerHigh, label = "Today", isBordered = true)
                 }
             }
-    
+
             // Days Header
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
@@ -82,42 +103,52 @@ fun CalendarHeatmap(
                         text = day,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.width(28.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-    
+
             // Grid
-            weeks.forEachIndexed { index, week ->
-                // Check if this week starts a new month
-                val firstDay = week.first()
-                val showMonthLabel = firstDay.dayOfMonth <= 7
-                
-                if (showMonthLabel && index > 0) {
-                    Text(
-                        text = firstDay.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-    
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    week.forEach { date ->
-                        HeatmapCell(
-                            date = date,
-                            status = when {
-                                date == today && date in completedDates -> HeatmapStatus.TODAY_DONE
-                                date == today -> HeatmapStatus.TODAY_EMPTY
-                                date in completedDates -> HeatmapStatus.DONE
-                                else -> HeatmapStatus.EMPTY
-                            },
-                            onClick = { if (!date.isAfter(today)) onDayClick(date) }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                weeks.forEachIndexed { index, week ->
+                    // Check for month label
+                    val firstDay = week.first()
+                    // Show month label if week contains the 1st of a month
+                    val monthLabel = week.firstOrNull { it.dayOfMonth == 1 }?.month
+                        ?.getDisplayName(TextStyle.FULL, Locale.getDefault())
+                    
+                    if (monthLabel != null) {
+                         Text(
+                            text = monthLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        week.forEach { date ->
+                            // Interaction logic
+                            val isFuture = date.isAfter(today)
+                            val isToday = date == today
+                            val isDone = date in completedDates
+                            // "Missed" logic: Past + Not Done + (For simplicity, assuming daily habit)
+                            // In real app, check frequency. Here we assume daily.
+                            val isMissed = !isFuture && !isDone && !isToday
+
+                            HeatmapCell(
+                                date = date,
+                                isToday = isToday,
+                                isDone = isDone,
+                                isMissed = isMissed,
+                                isFuture = isFuture,
+                                onClick = { if (!isFuture) onDayClick(date) }
+                            )
+                        }
                     }
                 }
             }
@@ -125,63 +156,71 @@ fun CalendarHeatmap(
     }
 }
 
-private enum class HeatmapStatus {
-    EMPTY, DONE, TODAY_EMPTY, TODAY_DONE
-}
-
 @Composable
 private fun HeatmapCell(
     date: LocalDate,
-    status: HeatmapStatus,
+    isToday: Boolean,
+    isDone: Boolean,
+    isMissed: Boolean,
+    isFuture: Boolean,
     onClick: () -> Unit
 ) {
-    val color = when (status) {
-        HeatmapStatus.DONE -> MaterialTheme.colorScheme.primary
-        HeatmapStatus.TODAY_DONE -> MaterialTheme.colorScheme.primary
-        HeatmapStatus.TODAY_EMPTY -> Color.Transparent
-        HeatmapStatus.EMPTY -> MaterialTheme.colorScheme.surfaceVariant
+    // Colors
+    val backgroundColor = when {
+        isDone -> MaterialTheme.colorScheme.primary
+        isMissed -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f) // Muted red
+        isToday -> Color.Transparent // Border only if empty
+        else -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f) // Empty/Future
     }
     
-    val borderColor = when (status) {
-        HeatmapStatus.TODAY_EMPTY, HeatmapStatus.TODAY_DONE -> MaterialTheme.colorScheme.primary
-        else -> Color.Transparent
-    }
-
-    // Animation state
-    val isDone = status == HeatmapStatus.DONE || status == HeatmapStatus.TODAY_DONE
-    val scale = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (isDone) 1f else 0.85f,
-        label = "scale"
+    val borderColor = if (isToday) MaterialTheme.colorScheme.primary else Color.Transparent
+    
+    val animatedColor by animateColorAsState(
+        targetValue = backgroundColor,
+        animationSpec = tween(300),
+        label = "cellColor"
     )
-    val alpha = androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (isDone) 1f else 0.5f,
-        label = "alpha"
+
+    val scale by animateFloatAsState(
+        targetValue = if (isDone) 1f else 0.9f,
+        label = "cellScale"
     )
 
     Box(
         modifier = Modifier
-            .size(28.dp)
-            .padding(2.dp) // Gap
-            .scale(scale.value)
-            .clip(RoundedCornerShape(4.dp))
-            .background(color.copy(alpha = if(status == HeatmapStatus.EMPTY) 0.3f else 1f))
+            .weight(1f)
+            .aspectRatio(1f) // Square cells
+            .padding(2.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(6.dp))
+            .background(animatedColor)
             .border(
-                width = if (status == HeatmapStatus.TODAY_EMPTY || status == HeatmapStatus.TODAY_DONE) 2.dp else 0.dp,
+                width = if (isToday) 2.dp else 0.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(6.dp)
             )
-            .clickable(onClick = onClick)
-    )
+            .clickable(enabled = !isFuture, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+         if (isToday && !isDone) {
+            // Optional: Small dot or something to indicate "Today" inside? 
+            // The border is enough as per requirement.
+        }
+    }
 }
 
 @Composable
-private fun LegendDot(color: Color, label: String) {
+private fun LegendItem(color: Color, label: String, isBordered: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(8.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(color)
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(if (isBordered) Color.Transparent else color)
+                .then(
+                    if (isBordered) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) 
+                    else Modifier
+                )
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
