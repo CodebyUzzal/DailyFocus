@@ -6,8 +6,11 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -26,8 +29,20 @@ fun PremiumExtendedFAB(
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     expanded: Boolean = true
 ) {
+    var isVisible by remember { mutableStateOf(false) }
+    
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+    
+    val entranceScale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = AnimationConstants.slowTween(),
+        label = "entrance"
+    )
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.05f else 1.0f,
@@ -37,7 +52,7 @@ fun PremiumExtendedFAB(
 
     ExtendedFloatingActionButton(
         onClick = onClick,
-        modifier = modifier.scale(scale),
+        modifier = modifier.scale(scale * entranceScale),
         containerColor = containerColor,
         contentColor = contentColor,
         interactionSource = interactionSource,

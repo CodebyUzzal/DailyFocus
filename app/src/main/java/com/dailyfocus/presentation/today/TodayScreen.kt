@@ -92,7 +92,7 @@ fun TodayScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.Top
                         ) {
-                            CompactGreetingHeader(
+                            TodayHeader(
                                 username = state.userName,
                                 date = state.date.format(
                                     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
@@ -152,14 +152,15 @@ fun TodayScreen(
                     }
 
                     // ── Active Tasks ──────────────────────────────────────
+                    item {
+                        SectionHeader(
+                            title = "Today",
+                            modifier = Modifier.padding(horizontal = Spacing.m)
+                        )
+                    }
+
                     val activeTasks = state.todayTasks.filter { !it.isCompleted }
                     if (activeTasks.isNotEmpty()) {
-                        item {
-                            SectionHeader(
-                                title = "Today's Focus",
-                                modifier = Modifier.padding(horizontal = Spacing.m)
-                            )
-                        }
                         items(activeTasks, key = { "task_${it.id}" }) { task ->
                             DailyFocusTaskItem(
                                 title = task.title,
@@ -174,10 +175,8 @@ fun TodayScreen(
                         }
                     } else if (state.todayTasks.isEmpty()) {
                         item {
-                            EmptyState(
-                                message = "Ready to focus?",
-                                subMessage = "Add your first task for today.",
-                                icon = Icons.Default.Check
+                            PremiumEmptyState(
+                                onAddFirstTask = { showAddDialog = true }
                             )
                         }
                     }
@@ -226,7 +225,7 @@ fun TodayScreen(
                                     onToggle = { viewModel.onToggleTodayTask(task) },
                                     modifier = Modifier
                                         .padding(horizontal = Spacing.m, vertical = 4.dp)
-                                        .animateItem() 
+                                    // .animateItemPlacement() removed for build stability 
                                 )
                             }
                         }
