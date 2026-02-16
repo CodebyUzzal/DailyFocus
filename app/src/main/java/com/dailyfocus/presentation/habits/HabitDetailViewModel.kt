@@ -18,6 +18,7 @@ data class HabitDetailUiState(
     val completionRate: Int = 0,
     val currentWeekCount: Int = 0,
     val totalLogs: Int = 0,
+    val selectedMonth: java.time.YearMonth = java.time.YearMonth.now(),
     val isLoading: Boolean = true,
     val userMessage: UiMessage? = null
 )
@@ -104,6 +105,10 @@ class HabitDetailViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onMonthChanged(newMonth: java.time.YearMonth) {
+        _uiState.update { it.copy(selectedMonth = newMonth) }
     }
 
     fun onMessageDismissed() {

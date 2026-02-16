@@ -10,16 +10,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dailyfocus.core.ui.theme.MomentumGradientEnd
+import com.dailyfocus.core.ui.theme.MomentumGradientStart
+import com.dailyfocus.core.ui.theme.Radius
 import com.dailyfocus.core.ui.theme.Spacing
 
 /**
- * Premium Momentum Card.
+ * Premium Momentum Card (Phase 1).
  * Replaces the standard streak view with a motivation-first design.
  */
 @Composable
@@ -50,7 +51,7 @@ fun MomentumCard(
     val infiniteTransition = rememberInfiniteTransition(label = "flamePulse")
     val flameGlow by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.2f,
+        targetValue = 1.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -58,21 +59,21 @@ fun MomentumCard(
         label = "flameGlow"
     )
 
-    // Deep gradient background
+    // Premium deep gradient
     val gradient = Brush.linearGradient(
         colors = listOf(
-            MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.surfaceContainer,
+            MomentumGradientStart,
+            MomentumGradientEnd,
         )
     )
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .scale(scale)
-            .shadow(elevation = 8.dp, shape = MaterialTheme.shapes.large, spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+            .scale(scale),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Handle BG manually for gradient
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
@@ -88,7 +89,7 @@ fun MomentumCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Animated Flame
                         Icon(
@@ -96,7 +97,7 @@ fun MomentumCard(
                             contentDescription = "Streak Flame",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(56.dp)
                                 .scale(flameGlow)
                         )
                         
@@ -104,12 +105,12 @@ fun MomentumCard(
                         Column {
                             Text(
                                 text = "$currentStreak Day Streak",
-                                style = MaterialTheme.typography.displayMedium,
+                                style = MaterialTheme.typography.displayMedium, // 48-56sp equivalent
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "You're building momentum",
+                                text = if (currentStreak > 0) "You're building momentum" else "Start your streak today",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -124,7 +125,7 @@ fun MomentumCard(
                 ) {
                     Text(
                         text = "Best",
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(

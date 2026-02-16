@@ -16,10 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dailyfocus.core.ui.theme.Spacing
+import com.dailyfocus.core.ui.theme.Radius
 
 /**
- * Premium Stats Row.
+ * Premium Stats Row (Phase 2).
  * Displays key metrics in a clean, elevated layout.
  */
 @Composable
@@ -31,7 +31,7 @@ fun StatsRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp) // Premium spacing
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatCard(
             label = "Completion",
@@ -60,7 +60,7 @@ private fun StatCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow, // Surface2 equivalent
         tonalElevation = 2.dp
     ) {
         Column(
@@ -89,7 +89,7 @@ private fun StatCard(
             // Label
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleMedium, // Requested
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )

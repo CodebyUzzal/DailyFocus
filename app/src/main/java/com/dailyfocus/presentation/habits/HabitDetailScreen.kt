@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,21 +58,23 @@ fun HabitDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 96.dp), // Premium scroll buffer
+                contentPadding = PaddingValues(top = 16.dp, start = 0.dp, end = 0.dp, bottom = 96.dp), // Zero Hz padding for full width, handled inside items
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
                     state.habit?.let { habitWithStreak ->
-                        // 1. Hero Streak
+                        // 1. Hero Streak (Momentum)
                         MomentumCard(
                             currentStreak = habitWithStreak.currentStreak,
                             longestStreak = habitWithStreak.longestStreak,
                             modifier = Modifier.padding(horizontal = Spacing.m)
                         )
-                        
-                        Spacer(modifier = Modifier.height(Spacing.l))
+                    }
+                }
 
-                        // 2. Insight Row
+                item {
+                    state.habit?.let {
+                        // 2. Stats Row
                         StatsRow(
                             completionRate = state.completionRate,
                             currentWeekCount = state.currentWeekCount,
@@ -83,12 +85,25 @@ fun HabitDetailScreen(
                 }
 
                 item {
+                    // 3. Section Header
+                     Text(
+                        text = "Consistency",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = Spacing.m)
+                    )
+                }
+
+                item {
                     state.habit?.let {
-                        // 3. Calendar heatmap
+                        // 4. Calendar heatmap
                         CalendarHeatmap(
                             completedDates = state.completedDates,
                             onDayClick = { date -> viewModel.toggleHabitLog(date) },
-                            modifier = Modifier
+                            modifier = Modifier.padding(horizontal = Spacing.m),
+                            currentMonth = state.selectedMonth,
+                            onMonthChanged = viewModel::onMonthChanged
                         )
                     }
                 }
@@ -96,5 +111,3 @@ fun HabitDetailScreen(
         }
     }
 }
-
-

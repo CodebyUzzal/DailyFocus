@@ -58,6 +58,14 @@ val HeatmapMissed = StreakRingMissed
 val HeatmapEmpty = StreakRingEmpty
 val HeatmapToday = Primary80
 
+// Premium Heatmap Colors (Soft)
+val HeatmapDoneSoft = Color(0xD926A69A) // 85% opacity
+val HeatmapMissedSoft = Color(0x66FFB4AB) // 40% opacity
+
+// Momentum Card Gradient
+val MomentumGradientStart = Surface2
+val MomentumGradientEnd = Surface3
+
 // Summary Card Gradient
 val GradientSummaryStart = Color(0xFF3F51B5) // Primary40
 val GradientSummaryEnd = Color(0xFF283896)   // Primary30

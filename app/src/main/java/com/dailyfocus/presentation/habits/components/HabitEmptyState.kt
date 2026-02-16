@@ -21,6 +21,7 @@ fun HabitEmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Premium Empty State
         Icon(
             imageVector = Icons.Default.DateRange,
             contentDescription = null,
@@ -44,7 +45,8 @@ fun HabitEmptyState(
         Spacer(modifier = Modifier.height(Spacing.xl))
         Button(
             onClick = onMarkToday,
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 12.dp)
         ) {
             Text("Mark Today as Done")
         }
