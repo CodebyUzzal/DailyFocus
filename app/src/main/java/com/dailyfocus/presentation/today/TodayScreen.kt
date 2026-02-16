@@ -21,7 +21,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,7 +81,7 @@ fun TodayScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 96.dp), // Check implementation plan
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m) // Increased to 16dp
                 ) {
                     // ── Header ──────────────────────────────────────────────
                     item {
@@ -186,6 +188,11 @@ fun TodayScreen(
                     if (completedTasksList.isNotEmpty()) {
                          item {
                             Spacer(modifier = Modifier.height(Spacing.m))
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = Spacing.m),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.s))
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -194,9 +201,10 @@ fun TodayScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Completed (${completedTasksList.size})",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "Completed • ${completedTasksList.size}",
+                                    style = MaterialTheme.typography.titleSmall, // Smaller, less intrusive
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Medium
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
                                 val rotation by animateFloatAsState(if (isCompletedExpanded) 180f else 0f)
@@ -209,10 +217,6 @@ fun TodayScreen(
                             }
                         }
                         
-                        // Using items directly inside LazyColumn, but need to wrap conditionally
-                        // Since we can't wrap 'items' in 'AnimatedVisibility' easily inside LazyColumn scope without logic
-                        // We will use a separate item for the list if expanded, or just iterate manualy
-                        
                          if (isCompletedExpanded) {
                              items(completedTasksList, key = { "task_${it.id}" }) { task ->
                                 DailyFocusTaskItem(
@@ -224,7 +228,8 @@ fun TodayScreen(
                                     showCategory = state.categoryFilter == null,
                                     onToggle = { viewModel.onToggleTodayTask(task) },
                                     modifier = Modifier
-                                        .padding(horizontal = Spacing.m, vertical = 4.dp)
+                                        .padding(start = Spacing.xl, end = Spacing.m, top = 4.dp, bottom = 4.dp) // Indented
+                                        .alpha(0.7f) // Reduced opacity
                                     // .animateItemPlacement() removed for build stability 
                                 )
                             }

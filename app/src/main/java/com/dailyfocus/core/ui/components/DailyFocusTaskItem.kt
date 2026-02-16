@@ -60,7 +60,7 @@ fun DailyFocusTaskItem(
 ) {
     // Animation States
     val elevation by animateDpAsState(
-        targetValue = if (isCompleted) Elevation.Level0 else Elevation.Level1,
+        targetValue = if (isCompleted) 0.dp else 2.dp, // Level 0 vs Level 2 (Surface 2)
         label = "elevation"
     )
     
@@ -68,12 +68,12 @@ fun DailyFocusTaskItem(
         targetValue = if (isCompleted) 
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) 
         else 
-            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.surface, // Surface with tonal elevation will create Surface2 look
         label = "background"
     )
 
     val contentAlpha by animateFloatAsState(
-        targetValue = if (isCompleted) 0.6f else 1.0f,
+        targetValue = if (isCompleted) 0.7f else 1.0f,
         label = "alpha"
     )
 
@@ -87,7 +87,7 @@ fun DailyFocusTaskItem(
         modifier = modifier
             .fillMaxWidth()
             .alpha(contentAlpha),
-        shape = RoundedCornerShape(Radius.medium),
+        shape = RoundedCornerShape(16.dp), // Premium roundness
         color = backgroundColor,
         tonalElevation = elevation,
         shadowElevation = elevation

@@ -2,6 +2,7 @@ package com.dailyfocus.presentation.today.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,8 +46,8 @@ fun CategoryFilterChips(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.m, vertical = Spacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+            .padding(horizontal = Spacing.l, vertical = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s) // Increased spacing between chips too
     ) {
         TaskCategory.entries.forEach { category ->
             val isSelected = selectedCategory == category
@@ -76,7 +78,7 @@ private fun SegmentedChip(
     )
 
     val contentColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, // Increased contrast
         animationSpec = tween(300),
         label = "text"
     )
@@ -92,9 +94,16 @@ private fun SegmentedChip(
         label = "elevation"
     )
 
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1f, // Scale animation
+        animationSpec = tween(300),
+        label = "scale"
+    )
+
     Surface(
         modifier = modifier
             .height(40.dp)
+            .scale(scale) // Apply scale
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

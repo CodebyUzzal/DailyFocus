@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +65,7 @@ fun TodayHeader(
                 text = "Hello, $username",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Bold // Bolder
             )
         }
 
@@ -73,7 +74,8 @@ fun TodayHeader(
 
         // 3. Stats Chips
         StatsRow(
-            tasksSite = taskCount - completedCount,
+            completedCount = completedCount,
+            tasksLeft = taskCount - completedCount,
             focusMinutes = focusMinutes
         )
     }
@@ -116,23 +118,30 @@ private fun DailyProgressStrip(
 
 @Composable
 private fun StatsRow(
-    tasksSite: Int,
+    completedCount: Int,
+    tasksLeft: Int,
     focusMinutes: Int,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs) // Tighter spacing for 3 chips
     ) {
         StatsChip(
+            icon = Icons.Default.Check,
+            text = "$completedCount Done",
+            modifier = Modifier.weight(1f)
+        )
+
+        StatsChip(
             icon = Icons.Default.CheckBoxOutlineBlank,
-            text = "$tasksSite Left",
+            text = "$tasksLeft Left",
             modifier = Modifier.weight(1f)
         )
 
         StatsChip(
             icon = Icons.Default.AccessTime,
-            text = formatFocusTime(focusMinutes),
+            text = formatFocusTimeShort(focusMinutes),
             modifier = Modifier.weight(1f)
         )
     }
@@ -175,4 +184,10 @@ private fun formatFocusTime(minutes: Int): String {
     val h = minutes / 60
     val m = minutes % 60
     return if (h > 0) "${h}h ${m}m Focus" else "${m}m Focus"
+}
+
+private fun formatFocusTimeShort(minutes: Int): String {
+    val h = minutes / 60
+    val m = minutes % 60
+    return if (h > 0) "${h}h ${m}m" else "${m}m"
 }
