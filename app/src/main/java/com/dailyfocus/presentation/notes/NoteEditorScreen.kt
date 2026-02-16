@@ -15,6 +15,8 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Redo
 import androidx.compose.material.icons.outlined.Undo
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,6 +59,7 @@ fun NoteEditorScreen(
     
     val bottomSheetState = rememberModalBottomSheetState()
     var showColorPicker by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -111,11 +114,30 @@ fun NoteEditorScreen(
                 IconButton(onClick = { /* Redo stub */ }, enabled = false) {
                     Icon(Icons.Outlined.Redo, contentDescription = "Redo", tint = Neutral90.copy(alpha = 0.3f))
                 }
-                IconButton(onClick = {
-                     viewModel.deleteNote()
-                     onBack()
-                }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
+                Box {
+                    IconButton(onClick = { showMenu = !showMenu }) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        containerColor = Surface2
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = Neutral90) },
+                            onClick = {
+                                viewModel.deleteNote()
+                                onBack()
+                                showMenu = false
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = Neutral90) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Share", color = Neutral90) },
+                            onClick = { showMenu = false },
+                            leadingIcon = { Icon(Icons.Rounded.Share, contentDescription = null, tint = Neutral90) }
+                        )
+                    }
                 }
             }
         },
