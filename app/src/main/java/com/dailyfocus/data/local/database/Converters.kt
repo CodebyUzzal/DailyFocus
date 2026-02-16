@@ -3,6 +3,9 @@ package com.dailyfocus.data.local.database
 import androidx.room.TypeConverter
 import com.dailyfocus.domain.model.GoalType
 import com.dailyfocus.domain.model.TaskCategory
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -70,4 +73,35 @@ class Converters {
             }
             .toSet()
     }
+    // ── List<ChecklistItem> ─────────────────────────────────────────────
+    
+    @TypeConverter
+    fun fromChecklistItems(items: List<com.dailyfocus.data.local.entity.ChecklistItem>?): String? {
+        if (items.isNullOrEmpty()) return "[]"
+        return try {
+            kotlinx.serialization.json.Json.encodeToString(items)
+        } catch (e: Exception) {
+            "[]"
+        }
+    }
+
+    @TypeConverter
+    fun toChecklistItems(value: String?): List<com.dailyfocus.data.local.entity.ChecklistItem> {
+        if (value.isNullOrBlank()) return emptyList()
+        return try {
+            kotlinx.serialization.json.Json.decodeFromString(value)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ── NoteColor ───────────────────────────────────────────────────────
+
+    @TypeConverter
+    fun fromNoteColor(color: com.dailyfocus.data.local.entity.NoteColor?): String = color?.name ?: com.dailyfocus.data.local.entity.NoteColor.DEFAULT.name
+
+    @TypeConverter
+    fun toNoteColor(value: String?): com.dailyfocus.data.local.entity.NoteColor =
+        value?.let { runCatching { com.dailyfocus.data.local.entity.NoteColor.valueOf(it) }.getOrDefault(com.dailyfocus.data.local.entity.NoteColor.DEFAULT) }
+            ?: com.dailyfocus.data.local.entity.NoteColor.DEFAULT
 }

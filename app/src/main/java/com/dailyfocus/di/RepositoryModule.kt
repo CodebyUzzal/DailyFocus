@@ -30,4 +30,7 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindDailyLogRepository(impl: DailyLogRepositoryImpl): DailyLogRepository
+
+    @Binds @Singleton
+    abstract fun bindNoteRepository(impl: NoteRepositoryImpl): NoteRepository
 }

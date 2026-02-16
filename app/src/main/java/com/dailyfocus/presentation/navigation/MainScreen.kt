@@ -184,6 +184,35 @@ fun MainScreen(appPreferences: AppPreferences) {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+
+            // ── Notes ───────────────────────────────────────────────
+            composable(Screen.Notes.route) {
+                com.dailyfocus.presentation.notes.NotesScreen(
+                    onNoteClick = { noteId ->
+                        navController.navigate(Destinations.noteEditor(noteId))
+                    },
+                    onAddNoteClick = { isChecklist ->
+                        navController.navigate(Destinations.noteEditor(-1L, isChecklist))
+                    }
+                )
+            }
+
+            composable(
+                route = Destinations.NOTE_EDITOR,
+                arguments = listOf(
+                    navArgument("noteId") { type = NavType.LongType },
+                    navArgument("isChecklist") { type = NavType.BoolType; defaultValue = false }
+                )
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getLong("noteId") ?: -1L
+                val isChecklist = backStackEntry.arguments?.getBoolean("isChecklist") ?: false
+                
+                com.dailyfocus.presentation.notes.NoteEditorScreen(
+                    noteId = noteId,
+                    isChecklist = isChecklist,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

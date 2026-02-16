@@ -37,4 +37,5 @@ object DatabaseModule {
     @Provides fun provideGoalDao(db: AppDatabase): GoalDao = db.goalDao()
     @Provides fun provideGoalItemDao(db: AppDatabase): GoalItemDao = db.goalItemDao()
     @Provides fun provideDailyLogEntryDao(db: AppDatabase): DailyLogEntryDao = db.dailyLogEntryDao()
+    @Provides fun provideNoteDao(db: AppDatabase): NoteDao = db.noteDao()
 }

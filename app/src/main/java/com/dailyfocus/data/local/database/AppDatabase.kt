@@ -18,9 +18,10 @@ import com.dailyfocus.data.local.entity.*
         HabitLogEntity::class,
         GoalEntity::class,
         GoalItemEntity::class,
-        DailyLogEntryEntity::class
+        DailyLogEntryEntity::class,
+        NoteEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -32,4 +33,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun goalDao(): GoalDao
     abstract fun goalItemDao(): GoalItemDao
     abstract fun dailyLogEntryDao(): DailyLogEntryDao
+    abstract fun noteDao(): NoteDao
 }
