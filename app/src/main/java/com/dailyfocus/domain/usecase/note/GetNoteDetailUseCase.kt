@@ -5,7 +5,7 @@ import com.dailyfocus.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetNoteByIdUseCase @Inject constructor(
+class GetNoteDetailUseCase @Inject constructor(
     private val repository: NoteRepository
 ) {
     operator fun invoke(id: Long): Flow<Note?> {

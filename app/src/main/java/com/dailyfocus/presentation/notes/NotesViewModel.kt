@@ -3,7 +3,6 @@ package com.dailyfocus.presentation.notes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dailyfocus.domain.model.Note
-import com.dailyfocus.domain.model.NoteColor
 import com.dailyfocus.domain.usecase.note.NoteUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -39,11 +38,17 @@ class NotesViewModel @Inject constructor(
 
     fun addNote(title: String, content: String, isChecklist: Boolean) {
         viewModelScope.launch {
-            noteUseCases.addNote(
+            val items = if (content.isNotBlank()) {
+                listOf(com.dailyfocus.domain.model.NoteContent(text = content, position = 0))
+            } else {
+                emptyList()
+            }
+            
+            noteUseCases.saveNote(
                 Note(
                     title = title,
-                    content = content,
-                    isChecklist = isChecklist
+                    isChecklist = isChecklist,
+                    items = items
                 )
             )
         }

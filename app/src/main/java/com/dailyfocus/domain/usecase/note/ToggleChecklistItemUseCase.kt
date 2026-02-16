@@ -9,16 +9,16 @@ class ToggleChecklistItemUseCase @Inject constructor(
     private val repository: NoteRepository
 ) {
     suspend operator fun invoke(note: Note, itemIndex: Int) {
-        if (itemIndex < 0 || itemIndex >= note.checklistItems.size) return
+        if (itemIndex < 0 || itemIndex >= note.items.size) return
 
-        val currentItems = note.checklistItems.toMutableList()
+        val currentItems = note.items.toMutableList()
         val item = currentItems[itemIndex]
         currentItems[itemIndex] = item.copy(isChecked = !item.isChecked)
 
         val updatedNote = note.copy(
-            checklistItems = currentItems,
-            updatedAt = LocalDateTime.now()
+            items = currentItems,
+            updatedAt = LocalDateTime.now() // Ensure we update timestamp
         )
-        repository.updateNote(updatedNote)
+        repository.saveNote(updatedNote)
     }
 }

@@ -21,9 +21,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.core.ui.theme.*
-import com.dailyfocus.domain.model.ChecklistItem
 import com.dailyfocus.domain.model.Note
-import com.dailyfocus.domain.model.NoteColor
+import com.dailyfocus.domain.model.NoteBackgroundStyle
 
 @Composable
 fun DailyFocusNoteCard(
@@ -35,10 +34,7 @@ fun DailyFocusNoteCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(targetValue = if (isPressed) 0.98f else 1f, label = "scale")
 
-    val containerColor = getContainerColor(note.color)
-    // Dark text logic removed as we use specific colors below
-    
-    val cardColor = if (note.color == NoteColor.DEFAULT) Surface2 else getTintedSurface(note.color)
+    val cardColor = if (note.backgroundStyle == NoteBackgroundStyle.DEFAULT) Surface2 else getTintedSurface(note.backgroundStyle)
 
     Surface(
         modifier = modifier
@@ -47,7 +43,7 @@ fun DailyFocusNoteCard(
         shape = RoundedCornerShape(16.dp),
         color = cardColor,
         border = if (note.isPinned) BorderStroke(1.dp, Primary80.copy(alpha = 0.5f)) else BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-        shadowElevation = 0.dp // "No heavy elevation"
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
@@ -66,30 +62,32 @@ fun DailyFocusNoteCard(
             }
 
             if (note.isChecklist) {
-                ChecklistPreview(note.checklistItems)
-            } else if (!note.content.isNullOrBlank()) {
-                Text(
-                    text = note.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Neutral90,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight // ensure consistent height
-                )
+                ChecklistPreview(note.items)
+            } else {
+                val content = note.items.firstOrNull()?.text
+                if (!content.isNullOrBlank()) {
+                    Text(
+                        text = content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Neutral90,
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ChecklistPreview(items: List<ChecklistItem>) {
+fun ChecklistPreview(items: List<com.dailyfocus.domain.model.NoteContent>) {
     val displayItems = items.take(4)
     val remaining = items.size - 4
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         displayItems.forEach { item ->
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                 // Custom checkbox UI or just icon
                  Icon(
                      imageVector = if (item.isChecked) androidx.compose.material.icons.Icons.Default.CheckBox else androidx.compose.material.icons.Icons.Default.CheckBoxOutlineBlank,
                      contentDescription = null,
@@ -119,27 +117,17 @@ fun ChecklistPreview(items: List<ChecklistItem>) {
     }
 }
 
-// Helper to map NoteColor to Compose Color (Dark Mode Optimized)
-// We mix the base color with Surface2 to create a subtle tinted surface.
-fun getTintedSurface(color: NoteColor): Color {
-    val base = when (color) {
-        NoteColor.DEFAULT -> return Surface2
-        NoteColor.RED -> Color(0xFF5C2B29)
-        NoteColor.ORANGE -> Color(0xFF5C3A29)
-        NoteColor.YELLOW -> Color(0xFF5C4F29)
-        NoteColor.GREEN -> Color(0xFF2E4C2E)
-        NoteColor.BLUE -> Color(0xFF283896) // Primary30-ish
-        NoteColor.PURPLE -> Color(0xFF4A2C5E)
-        NoteColor.PINK -> Color(0xFF5E2C46)
-        NoteColor.BROWN -> Color(0xFF3E332E)
-        NoteColor.GRAY -> Surface3
+fun getTintedSurface(style: NoteBackgroundStyle): Color {
+    return when (style) {
+        NoteBackgroundStyle.DEFAULT -> Surface2
+        NoteBackgroundStyle.RED -> Color(0xFF5C2B29)
+        NoteBackgroundStyle.ORANGE -> Color(0xFF5C3A29)
+        NoteBackgroundStyle.YELLOW -> Color(0xFF5C4F29)
+        NoteBackgroundStyle.GREEN -> Color(0xFF2E4C2E)
+        NoteBackgroundStyle.BLUE -> Color(0xFF283896)
+        NoteBackgroundStyle.PURPLE -> Color(0xFF4A2C5E)
+        NoteBackgroundStyle.PINK -> Color(0xFF5E2C46)
+        NoteBackgroundStyle.BROWN -> Color(0xFF3E332E)
+        NoteBackgroundStyle.GRAY -> Surface3
     }
-    // Blend with Surface2 just in case? Or just use these deep variants.
-    // These hex codes are arbitrary "Deep Dark" versions of the colors.
-    return base
-}
-
-fun getContainerColor(color: NoteColor): Color {
-     // Not used if we calculate above
-     return Color.Transparent
 }

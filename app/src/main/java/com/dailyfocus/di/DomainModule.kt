@@ -17,12 +17,12 @@ object DomainModule {
     fun provideNoteUseCases(repository: NoteRepository): NoteUseCases {
         return NoteUseCases(
             getNotes = GetNotesUseCase(repository),
-            getNoteById = GetNoteByIdUseCase(repository),
-            addNote = AddNoteUseCase(repository),
-            updateNote = UpdateNoteUseCase(repository),
+            getNoteDetail = GetNoteDetailUseCase(repository),
+            saveNote = SaveNoteUseCase(repository),
             deleteNote = DeleteNoteUseCase(repository),
             togglePin = TogglePinUseCase(repository),
-            toggleChecklistItem = ToggleChecklistItemUseCase(repository)
+            toggleChecklistItem = ToggleChecklistItemUseCase(repository),
+            reorderChecklist = ReorderChecklistUseCase(repository)
         )
     }
 }

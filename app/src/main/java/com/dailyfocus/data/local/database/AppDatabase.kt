@@ -19,9 +19,10 @@ import com.dailyfocus.data.local.entity.*
         GoalEntity::class,
         GoalItemEntity::class,
         DailyLogEntryEntity::class,
-        NoteEntity::class
+        NoteEntity::class,
+        NoteContentEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

@@ -1,6 +1,7 @@
 package com.dailyfocus.data.local.database
 
 import androidx.room.TypeConverter
+import com.dailyfocus.data.local.entity.NoteBackgroundStyle
 import com.dailyfocus.domain.model.GoalType
 import com.dailyfocus.domain.model.TaskCategory
 import kotlinx.serialization.encodeToString
@@ -73,35 +74,16 @@ class Converters {
             }
             .toSet()
     }
-    // ── List<ChecklistItem> ─────────────────────────────────────────────
     
-    @TypeConverter
-    fun fromChecklistItems(items: List<com.dailyfocus.data.local.entity.ChecklistItem>?): String? {
-        if (items.isNullOrEmpty()) return "[]"
-        return try {
-            kotlinx.serialization.json.Json.encodeToString(items)
-        } catch (e: Exception) {
-            "[]"
-        }
-    }
+    // Note: List<ChecklistItem> converter removed as we now use relational NoteContentEntity
+
+    // ── NoteBackgroundStyle ─────────────────────────────────────────────
 
     @TypeConverter
-    fun toChecklistItems(value: String?): List<com.dailyfocus.data.local.entity.ChecklistItem> {
-        if (value.isNullOrBlank()) return emptyList()
-        return try {
-            kotlinx.serialization.json.Json.decodeFromString(value)
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    // ── NoteColor ───────────────────────────────────────────────────────
+    fun fromNoteBackgroundStyle(style: NoteBackgroundStyle?): String = style?.name ?: NoteBackgroundStyle.DEFAULT.name
 
     @TypeConverter
-    fun fromNoteColor(color: com.dailyfocus.data.local.entity.NoteColor?): String = color?.name ?: com.dailyfocus.data.local.entity.NoteColor.DEFAULT.name
-
-    @TypeConverter
-    fun toNoteColor(value: String?): com.dailyfocus.data.local.entity.NoteColor =
-        value?.let { runCatching { com.dailyfocus.data.local.entity.NoteColor.valueOf(it) }.getOrDefault(com.dailyfocus.data.local.entity.NoteColor.DEFAULT) }
-            ?: com.dailyfocus.data.local.entity.NoteColor.DEFAULT
+    fun toNoteBackgroundStyle(value: String?): NoteBackgroundStyle =
+        value?.let { runCatching { NoteBackgroundStyle.valueOf(it) }.getOrDefault(NoteBackgroundStyle.DEFAULT) }
+            ?: NoteBackgroundStyle.DEFAULT
 }

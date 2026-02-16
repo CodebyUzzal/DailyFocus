@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,11 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.dailyfocus.core.ui.theme.Neutral10
-import com.dailyfocus.core.ui.theme.Neutral90
-import com.dailyfocus.core.ui.theme.Secondary40
-import com.dailyfocus.core.ui.theme.Surface1
-import com.dailyfocus.domain.model.ChecklistItem
+import com.dailyfocus.core.ui.theme.*
+import com.dailyfocus.domain.model.NoteContent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,9 +59,9 @@ fun NoteEditorScreen(
                 actions = {
                     IconButton(onClick = { viewModel.togglePin() }) {
                         Icon(
-                            imageVector = if (note?.isPinned == true) Icons.Rounded.PushPin else Icons.Rounded.PushPin,
+                            imageVector = Icons.Rounded.PushPin,
                             contentDescription = "Pin",
-                            tint = if (note?.isPinned == true) Secondary40 else Neutral90 // Highlight if pinned
+                            tint = if (note?.isPinned == true) Secondary40 else Neutral90
                         )
                     }
                     IconButton(onClick = {
@@ -83,16 +81,16 @@ fun NoteEditorScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                    .padding(horizontal = 24.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp) // Requirement: 120dp bottom padding
             ) {
                 // Title
                 item {
                     TextField(
                         value = note!!.title ?: "",
                         onValueChange = { viewModel.updateTitle(it) },
-                        placeholder = { Text("Title", style = MaterialTheme.typography.headlineSmall, color = Neutral90.copy(alpha = 0.5f)) },
-                        textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = Neutral90),
+                        placeholder = { Text("Title", style = MaterialTheme.typography.headlineMedium, color = Neutral90.copy(alpha = 0.5f)) },
+                        textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Neutral90),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -101,10 +99,11 @@ fun NoteEditorScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 if (note!!.isChecklist) {
-                    itemsIndexed(note!!.checklistItems) { index, item ->
+                    itemsIndexed(note!!.items, key = { _, item -> item.id + item.hashCode() }) { index, item ->
                         ChecklistItemRow(
                             item = item,
                             onCheckedChange = { isChecked -> viewModel.updateChecklistItem(index, item.text, isChecked) },
@@ -119,11 +118,10 @@ fun NoteEditorScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .clickable { /* Focus text field */ }
+                                .padding(vertical = 12.dp)
                         ) {
                             Icon(Icons.Rounded.Add, contentDescription = null, tint = Neutral90.copy(alpha = 0.5f))
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             TextField(
                                 value = newItemText,
                                 onValueChange = { newItemText = it },
@@ -148,21 +146,41 @@ fun NoteEditorScreen(
                     }
                 } else {
                     item {
+                        // Single expanding text field
+                        val content = note!!.items.firstOrNull()?.text ?: ""
                         TextField(
-                            value = note!!.content ?: "",
+                            value = content,
                             onValueChange = { viewModel.updateContent(it) },
                             placeholder = { Text("Note", style = MaterialTheme.typography.bodyLarge, color = Neutral90.copy(alpha = 0.5f)) },
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Neutral90),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Neutral90, lineHeight = androidx.compose.ui.unit.TextUnit(1.4f, androidx.compose.ui.unit.TextUnitType.Em)),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
-                            modifier = Modifier.fillMaxWidth().fillParentMaxHeight()
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
+            }
+            
+            // Floating Toolbar (Placeholder)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 24.dp, end = 24.dp),
+                contentAlignment = Alignment.BottomEnd
+            ) {
+                 Surface(
+                     shape = androidx.compose.foundation.shape.CircleShape,
+                     color = Surface3,
+                     modifier = Modifier.size(48.dp)
+                 ) {
+                     IconButton(onClick = { /* Toggle options */ }) {
+                         Icon(Icons.Rounded.MoreVert, contentDescription = "Options", tint = Neutral90)
+                     }
+                 }
             }
         }
     }
@@ -170,21 +188,28 @@ fun NoteEditorScreen(
 
 @Composable
 fun ChecklistItemRow(
-    item: ChecklistItem,
+    item: NoteContent,
     onCheckedChange: (Boolean) -> Unit,
     onTextChange: (String) -> Unit,
     onDelete: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
+        Icon(
+            imageVector = Icons.Default.DragHandle, 
+            contentDescription = "Drag", 
+            tint = Neutral90.copy(alpha = 0.3f),
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        
         Checkbox(
             checked = item.isChecked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(checkedColor = Secondary40, uncheckedColor = Neutral90)
         )
-        // Using BasicTextField or TextField? Let's use TextField for simplicity but cleaner style
+        
         TextField(
             value = item.text,
             onValueChange = onTextChange,
@@ -201,7 +226,7 @@ fun ChecklistItemRow(
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = onDelete) {
-            Icon(androidx.compose.material.icons.Icons.Default.Close, contentDescription = "Remove", tint = Neutral90.copy(alpha = 0.5f))
+            Icon(Icons.Default.Close, contentDescription = "Remove", tint = Neutral90.copy(alpha = 0.5f))
         }
     }
 }
