@@ -103,7 +103,8 @@ fun HabitDetailScreen(
                             onDayClick = { date -> viewModel.toggleHabitLog(date) },
                             modifier = Modifier.padding(horizontal = Spacing.m),
                             currentMonth = state.selectedMonth,
-                            onMonthChanged = viewModel::onMonthChanged
+                            onMonthChanged = viewModel::onMonthChanged,
+                            startDate = state.habit?.habit?.createdAt?.toLocalDate()
                         )
                     }
                 }

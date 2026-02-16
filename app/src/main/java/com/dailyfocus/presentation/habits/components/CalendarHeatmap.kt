@@ -52,7 +52,9 @@ fun CalendarHeatmap(
     modifier: Modifier = Modifier,
     // Phase 4: Month Navigation State
     currentMonth: YearMonth = YearMonth.now(),
-    onMonthChanged: (YearMonth) -> Unit = {}
+    onMonthChanged: (YearMonth) -> Unit = {},
+    // Timeline Correction
+    startDate: LocalDate? = null
 ) {
     val today = LocalDate.now()
     val firstDayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek
@@ -143,10 +145,12 @@ fun CalendarHeatmap(
                         week.forEach { date ->
                             val isCurrentMonth = date.month == currentMonth.month
                             val isFuture = date.isAfter(today)
+                            val isBeforeStart = startDate != null && date.isBefore(startDate)
                             val isToday = date == today
                             val isDone = date in completedDates
-                            // "Missed" logic: Past + Not Done + In Current Month View (to avoid clutter)
-                            val isMissed = !isFuture && !isDone && !isToday && isCurrentMonth
+                            
+                            // "Missed" logic: Past + Not Done + In Current Month + AFTER start date
+                            val isMissed = !isFuture && !isDone && !isToday && isCurrentMonth && !isBeforeStart
 
                             HeatmapCell(
                                 modifier = Modifier.weight(1f),
@@ -156,7 +160,8 @@ fun CalendarHeatmap(
                                 isMissed = isMissed,
                                 isFuture = isFuture,
                                 isCurrentMonth = isCurrentMonth,
-                                onClick = { if (!isFuture) onDayClick(date) }
+                                isBeforeStart = isBeforeStart,
+                                onClick = { if (!isFuture && !isBeforeStart) onDayClick(date) }
                             )
                         }
                     }
@@ -188,12 +193,14 @@ private fun HeatmapCell(
     isMissed: Boolean,
     isFuture: Boolean,
     isCurrentMonth: Boolean,
+    isBeforeStart: Boolean,
     onClick: () -> Unit
 ) {
     // Colors
     val backgroundColor = when {
         isDone -> HeatmapDoneSoft // Premium soft teal
         isMissed -> HeatmapMissedSoft // Premium soft red
+        isBeforeStart -> Color.Transparent // Not existing yet
         else -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = if (isCurrentMonth) 0.3f else 0.1f) // Empty
     }
     
@@ -222,7 +229,7 @@ private fun HeatmapCell(
                 color = borderColor,
                 shape = RoundedCornerShape(6.dp)
             )
-            .clickable(enabled = !isFuture && isCurrentMonth, onClick = onClick),
+            .clickable(enabled = !isFuture && isCurrentMonth && !isBeforeStart, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {}
 }

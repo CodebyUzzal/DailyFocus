@@ -55,10 +55,18 @@ class HabitDetailViewModel @Inject constructor(
 
                     // Calculate stats
                     val totalLogs = allLogDates.size
-                    // Calculate completion rate (last 30 days)
+                    
+                    // Calculate completion rate (last 30 days, restricted by creation date)
+                    val createdAtDate = habit.createdAt.toLocalDate()
                     val last30Days = (0..29).map { today.minusDays(it.toLong()) }
-                    val completedLast30 = last30Days.count { allLogDates.contains(it) }
-                    val rate = if (last30Days.isNotEmpty()) (completedLast30 * 100 / 30) else 0
+                    
+                    // Only consider days that are on or after the creation date
+                    val validDaysToCheck = last30Days.filter { !it.isBefore(createdAtDate) }
+                    val completedInValidPeriod = validDaysToCheck.count { allLogDates.contains(it) }
+                    
+                    // Avoid division by zero if habit created today
+                    val denominator = validDaysToCheck.size
+                    val rate = if (denominator > 0) (completedInValidPeriod * 100 / denominator) else 0
 
                     // Calculate current week (Monday to Sunday)
                     val currentDayOfWeek = today.dayOfWeek.value // 1 (Mon) - 7 (Sun)
