@@ -84,10 +84,11 @@ class NoteEditorViewModel @Inject constructor(
         if (note.title.isNullOrBlank() && note.content.isNullOrBlank() && note.checklistItems.isEmpty()) return
         
         viewModelScope.launch {
-            if (note.id == 0L) {
-                noteUseCases.addNote(note)
+            val noteToSave = note.copy(updatedAt = java.time.LocalDateTime.now())
+            if (noteToSave.id == 0L) {
+                noteUseCases.addNote(noteToSave)
             } else {
-                noteUseCases.updateNote(note)
+                noteUseCases.updateNote(noteToSave)
             }
         }
     }

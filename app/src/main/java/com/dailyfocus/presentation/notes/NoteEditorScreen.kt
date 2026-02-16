@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -200,7 +201,7 @@ fun ChecklistItemRow(
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = onDelete) {
-            Icon(Icons.Rounded.Close, contentDescription = "Remove", tint = Neutral90.copy(alpha = 0.5f))
+            Icon(androidx.compose.material.icons.Icons.Default.Close, contentDescription = "Remove", tint = Neutral90.copy(alpha = 0.5f))
         }
     }
 }

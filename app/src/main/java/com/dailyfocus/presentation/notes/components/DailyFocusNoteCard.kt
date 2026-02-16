@@ -36,13 +36,7 @@ fun DailyFocusNoteCard(
     val scale by animateFloatAsState(targetValue = if (isPressed) 0.98f else 1f, label = "scale")
 
     val containerColor = getContainerColor(note.color)
-    val contentColor = if (note.color == NoteColor.DEFAULT) Neutral90 else Color.Black // Dark text on pastel colors if we use them
-    // Actually, for "Calm surfaces", stick to dark theme colors unless explicitly "Red/Blue".
-    // Let's use subtle low-opacity colors for the dark theme to keep text white/light.
-    
-    // Adjust logic: For dark mode, colored notes should be dark variants of the color to maintain contrast with white text.
-    // However, Google Keep uses pastel colors even in dark mode sometimes, or dark versions.
-    // Let's stick to Surface2 for DEFAULT, and for others, use a tinted Surface2.
+    // Dark text logic removed as we use specific colors below
     
     val cardColor = if (note.color == NoteColor.DEFAULT) Surface2 else getTintedSurface(note.color)
 
@@ -78,7 +72,7 @@ fun DailyFocusNoteCard(
                     text = note.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Neutral90,
-                    maxLines = 8, // Requirements say "max 4 lines", let's restrict.
+                    maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight // ensure consistent height
                 )
