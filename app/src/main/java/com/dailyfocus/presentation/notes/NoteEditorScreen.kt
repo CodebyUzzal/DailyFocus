@@ -5,21 +5,32 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.outlined.AddBox
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Redo
+import androidx.compose.material.icons.outlined.Undo
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dailyfocus.core.ui.theme.*
+import com.dailyfocus.domain.model.NoteBackgroundStyle
 import com.dailyfocus.domain.model.NoteContent
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +54,10 @@ fun NoteEditorScreen(
         viewModel.saveNote()
         onBack()
     }
+    
+    val bottomSheetState = rememberModalBottomSheetState()
+    var showColorPicker by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -59,20 +74,50 @@ fun NoteEditorScreen(
                 actions = {
                     IconButton(onClick = { viewModel.togglePin() }) {
                         Icon(
-                            imageVector = Icons.Rounded.PushPin,
+                            imageVector = if (note?.isPinned == true) Icons.Rounded.PushPin else Icons.Rounded.PushPin, // Use filled variant if available or tint
                             contentDescription = "Pin",
                             tint = if (note?.isPinned == true) Secondary40 else Neutral90
                         )
                     }
-                    IconButton(onClick = {
-                        viewModel.deleteNote()
-                        onBack()
-                    }) {
-                        Icon(Icons.Rounded.Delete, contentDescription = "Delete", tint = Neutral90)
+                    IconButton(onClick = { /* Reminder stub */ }) {
+                         Icon(Icons.Rounded.Notifications, contentDescription = "Reminder", tint = Neutral90)
+                    }
+                    IconButton(onClick = { /* Archive stub */ }) {
+                         Icon(Icons.Rounded.Archive, contentDescription = "Archive", tint = Neutral90)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Surface1)
             )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = Surface2,
+                contentColor = Neutral90,
+                tonalElevation = 0.dp
+            ) {
+                IconButton(onClick = { /* Add functionality stub */ }) {
+                    Icon(Icons.Outlined.AddBox, contentDescription = "Add")
+                }
+                IconButton(onClick = { showColorPicker = true }) {
+                    Icon(Icons.Outlined.Palette, contentDescription = "Color")
+                }
+                IconButton(onClick = { /* Text format stub */ }) {
+                    Icon(androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_edit), contentDescription = "Format") // Placeholder
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = { /* Undo stub */ }, enabled = false) {
+                    Icon(Icons.Outlined.Undo, contentDescription = "Undo", tint = Neutral90.copy(alpha = 0.3f))
+                }
+                IconButton(onClick = { /* Redo stub */ }, enabled = false) {
+                    Icon(Icons.Outlined.Redo, contentDescription = "Redo", tint = Neutral90.copy(alpha = 0.3f))
+                }
+                IconButton(onClick = {
+                     viewModel.deleteNote()
+                     onBack()
+                }) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
+                }
+            }
         },
         containerColor = Surface1
     ) { paddingValues ->
@@ -82,7 +127,7 @@ fun NoteEditorScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(horizontal = 24.dp),
-                contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp) // Requirement: 120dp bottom padding
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
             ) {
                 // Title
                 item {
@@ -103,7 +148,7 @@ fun NoteEditorScreen(
                 }
 
                 if (note!!.isChecklist) {
-                    itemsIndexed(note!!.items, key = { _, item -> item.id + item.hashCode() }) { index, item ->
+                    itemsIndexed(note!!.items, key = { _, item -> item.id.toString() + item.hashCode() }) { index, item ->
                         ChecklistItemRow(
                             item = item,
                             onCheckedChange = { isChecked -> viewModel.updateChecklistItem(index, item.text, isChecked) },
@@ -114,11 +159,14 @@ fun NoteEditorScreen(
                     item {
                         // Add Item Row
                         var newItemText by remember { mutableStateOf("") }
+                        val focusRequester = remember { FocusRequester() }
+                        
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 12.dp)
+                                .clickable { focusRequester.requestFocus() }
                         ) {
                             Icon(Icons.Rounded.Add, contentDescription = null, tint = Neutral90.copy(alpha = 0.5f))
                             Spacer(modifier = Modifier.width(12.dp))
@@ -132,7 +180,9 @@ fun NoteEditorScreen(
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent
                                 ),
-                                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(
                                     onDone = {
                                         if (newItemText.isNotBlank()) {
                                             viewModel.addChecklistItem(newItemText)
@@ -140,7 +190,9 @@ fun NoteEditorScreen(
                                         }
                                     }
                                 ),
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(focusRequester)
                             )
                         }
                     }
@@ -164,26 +216,61 @@ fun NoteEditorScreen(
                     }
                 }
             }
-            
-            // Floating Toolbar (Placeholder)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 24.dp, end = 24.dp),
-                contentAlignment = Alignment.BottomEnd
+        }
+        
+        if (showColorPicker) {
+            ModalBottomSheet(
+                onDismissRequest = { showColorPicker = false },
+                sheetState = bottomSheetState,
+                containerColor = Surface2
             ) {
-                 Surface(
-                     shape = androidx.compose.foundation.shape.CircleShape,
-                     color = Surface3,
-                     modifier = Modifier.size(48.dp)
-                 ) {
-                     IconButton(onClick = { /* Toggle options */ }) {
-                         Icon(Icons.Rounded.MoreVert, contentDescription = "Options", tint = Neutral90)
+                 Column(modifier = Modifier.padding(16.dp)) {
+                     Text("Background Color", style = MaterialTheme.typography.titleMedium, color = Neutral90)
+                     Spacer(modifier = Modifier.height(16.dp))
+                     LazyColumn { // Actually horizontal flow row would be better but keeping simple for now
+                         // Or just a Row of circles
+                         item {
+                             Row(
+                                 modifier = Modifier.fillMaxWidth(), 
+                                 horizontalArrangement = Arrangement.SpaceEvenly
+                             ) {
+                                 // Simple palette samples
+                                 NoteBackgroundStyle.entries.take(5).forEach { style ->
+                                     ColorCircle(style) { 
+                                         viewModel.updateBackgroundStyle(style) 
+                                         scope.launch { bottomSheetState.hide() }.invokeOnCompletion { showColorPicker = false }
+                                     }
+                                 }
+                             }
+                             Spacer(modifier = Modifier.height(16.dp))
+                             Row(
+                                 modifier = Modifier.fillMaxWidth(), 
+                                 horizontalArrangement = Arrangement.SpaceEvenly
+                             ) {
+                                 NoteBackgroundStyle.entries.drop(5).forEach { style ->
+                                     ColorCircle(style) {
+                                         viewModel.updateBackgroundStyle(style)
+                                         scope.launch { bottomSheetState.hide() }.invokeOnCompletion { showColorPicker = false }
+                                     }
+                                 }
+                             }
+                         }
                      }
+                     Spacer(modifier = Modifier.height(32.dp))
                  }
             }
         }
     }
+}
+
+@Composable
+fun ColorCircle(style: NoteBackgroundStyle, onClick: () -> Unit) {
+    Surface(
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = com.dailyfocus.presentation.notes.components.getTintedSurface(style),
+        modifier = Modifier.size(48.dp).clickable(onClick = onClick),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Neutral90.copy(alpha = 0.2f))
+    ) {}
 }
 
 @Composable
@@ -198,7 +285,8 @@ fun ChecklistItemRow(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
         Icon(
-            imageVector = Icons.Default.DragHandle, 
+            // Use DragIndicator if possible, else custom icon or DragHandle
+            imageVector = Icons.Default.DragHandle, // Fallback for now, could be replaced with specific vector
             contentDescription = "Drag", 
             tint = Neutral90.copy(alpha = 0.3f),
             modifier = Modifier.padding(end = 8.dp)

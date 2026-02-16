@@ -8,9 +8,9 @@ import javax.inject.Inject
 class SaveNoteUseCase @Inject constructor(
     private val repository: NoteRepository
 ) {
-    suspend operator fun invoke(note: Note) {
+    suspend operator fun invoke(note: Note): Long {
         // Auto-update modification time
         val noteToSave = note.copy(updatedAt = LocalDateTime.now())
-        repository.saveNote(noteToSave)
+        return repository.saveNote(noteToSave)
     }
 }

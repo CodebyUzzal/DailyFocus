@@ -4,69 +4,143 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.dailyfocus.core.ui.theme.GradientFadeEnd
-import com.dailyfocus.core.ui.theme.GradientFadeStart
-import com.dailyfocus.core.ui.theme.Neutral90
-import com.dailyfocus.core.ui.theme.Secondary40
+import com.dailyfocus.core.ui.theme.*
 import com.dailyfocus.presentation.notes.components.DailyFocusNoteCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     onNoteClick: (Long) -> Unit,
-    onAddNoteClick: (Boolean) -> Unit, // Boolean: isChecklist
+    onAddNoteClick: (Boolean) -> Unit, 
     viewModel: NotesViewModel = hiltViewModel()
 ) {
     val notes by viewModel.notes.collectAsState()
     var showSheet by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Filter notes based on search query
+    val filteredNotes = remember(notes, searchQuery) {
+        if (searchQuery.isBlank()) notes
+        else notes.filter { 
+            (it.title?.contains(searchQuery, ignoreCase = true) == true) || 
+            (it.items.any { item -> item.text.contains(searchQuery, ignoreCase = true) })
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showSheet = true },
                 containerColor = Secondary40,
-                contentColor = Color.White
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = "Add Note")
             }
-        }
+        },
+        containerColor = Surface1
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (notes.isEmpty()) {
+            // Top Bar / Search Bar Area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                // Search Bar Lookalike
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = Surface2,
+                    shadowElevation = 2.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = Neutral90)
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Neutral90),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Secondary40),
+                            decorationBox = { innerTextField ->
+                                if (searchQuery.isEmpty()) {
+                                    Text("Search your notes", style = MaterialTheme.typography.bodyLarge, color = Neutral90.copy(alpha = 0.5f))
+                                }
+                                innerTextField()
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        if (searchQuery.isNotEmpty()) {
+                             IconButton(onClick = { searchQuery = "" }) {
+                                 Icon(Icons.Rounded.Close, contentDescription = "Clear", tint = Neutral90)
+                             }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Profile Placeholder
+                        Surface(
+                            shape = CircleShape,
+                            color = Secondary40,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                             Box(contentAlignment = Alignment.Center) {
+                                 Text("U", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                             }
+                        }
+                    }
+                }
+            }
+
+            if (filteredNotes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Rounded.Lightbulb, // Placeholder icon
+                            imageVector = if (searchQuery.isNotEmpty()) Icons.Default.Search else Icons.Rounded.Lightbulb,
                             contentDescription = null,
                             tint = Neutral90.copy(alpha = 0.3f),
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No notes yet",
+                            text = if (searchQuery.isNotEmpty()) "No matches found" else "No notes yet",
                             style = MaterialTheme.typography.titleMedium,
                             color = Neutral90.copy(alpha = 0.7f)
                         )
-                        Text(
-                            text = "Capture thoughts and ideas",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Neutral90.copy(alpha = 0.5f)
-                        )
+                        if (searchQuery.isEmpty()) {
+                            Text(
+                                text = "Capture thoughts and ideas",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Neutral90.copy(alpha = 0.5f)
+                            )
+                        }
                     }
                 }
             } else {
@@ -75,18 +149,14 @@ fun NotesScreen(
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 16.dp,
-                        bottom = 96.dp // FAB clearance
+                        top = 8.dp,
+                        bottom = 96.dp
                     ),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalItemSpacing = 16.dp,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Pinned Header logic could be here if we want headers, 
-                    // but usually StaggeredGrid just mixes them. 
-                    // Requirement: "Pinned notes first", sorted by query.
-                    // So we just iterate.
-                    items(notes, key = { it.id }) { note ->
+                    items(filteredNotes, key = { it.id }) { note ->
                         DailyFocusNoteCard(
                             note = note,
                             onClick = { onNoteClick(note.id) },
@@ -94,46 +164,16 @@ fun NotesScreen(
                     }
                 }
             }
-
-            // Top Fade
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(GradientFadeEnd, GradientFadeStart) // Inverted for top? No.
-                            // Fade from Opaque (Top) to Transparent (Bottom)?
-                            // Usually "Top fade overlay" means covering content scrolling under header.
-                            // But we have minimal header. Let's just do a simple gradient from Surface1 to Transparent
-                        )
-                    )
-                    .align(Alignment.TopCenter)
-            )
-
-            // Bottom Fade
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(GradientFadeStart, GradientFadeEnd)
-                        )
-                    )
-            )
         }
-
+        
         if (showSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showSheet = false },
-                containerColor = com.dailyfocus.core.ui.theme.Surface5
+                containerColor = Surface5
             ) {
                 Column(
                     modifier = Modifier
-                         .padding(bottom = 32.dp)
-                         .padding(horizontal = 16.dp)
+                         .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
                 ) {
                     Text(
                         text = "Create",
@@ -147,7 +187,7 @@ fun NotesScreen(
                         leadingContent = { Icon(Icons.Rounded.Description, contentDescription = null, tint = Neutral90) },
                         modifier = Modifier.clickable { 
                             showSheet = false
-                            onAddNoteClick(false) // isChecklist = false
+                            onAddNoteClick(false)
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
@@ -157,7 +197,7 @@ fun NotesScreen(
                         leadingContent = { Icon(Icons.Rounded.CheckBox, contentDescription = null, tint = Neutral90) },
                         modifier = Modifier.clickable {
                             showSheet = false
-                            onAddNoteClick(true) // isChecklist = true
+                            onAddNoteClick(true)
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                     )
@@ -165,4 +205,44 @@ fun NotesScreen(
             }
         }
     }
+}
+
+// Needed for BasicTextField
+@Composable
+fun BasicTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    textStyle: androidx.compose.ui.text.TextStyle = androidx.compose.ui.text.TextStyle.Default,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
+    singleLine: Boolean = true,
+    maxLines: Int = 1,
+    minLines: Int = 1,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+    onTextLayout: (androidx.compose.ui.text.TextLayoutResult) -> Unit = {},
+    interactionSource: androidx.compose.foundation.interaction.MutableInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+    cursorBrush: androidx.compose.ui.graphics.Brush = androidx.compose.ui.graphics.SolidColor(Color.Black),
+    decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit = @Composable { innerTextField -> innerTextField() }
+) {
+    androidx.compose.foundation.text.BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        readOnly = readOnly,
+        textStyle = textStyle,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        minLines = minLines,
+        visualTransformation = visualTransformation,
+        onTextLayout = onTextLayout,
+        interactionSource = interactionSource,
+        cursorBrush = cursorBrush,
+        decorationBox = decorationBox
+    )
 }

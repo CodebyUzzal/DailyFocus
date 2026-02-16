@@ -26,7 +26,7 @@ class NoteRepositoryImpl @Inject constructor(
         return dao.getNoteById(id).map { it?.toDomain() }
     }
 
-    override suspend fun saveNote(note: Note) {
+    override suspend fun saveNote(note: Note): Long {
         val noteEntity = note.toEntity()
         
         if (note.id == 0L) {
@@ -34,26 +34,14 @@ class NoteRepositoryImpl @Inject constructor(
             val newId = dao.insertNote(noteEntity)
             val contentEntities = note.items.map { it.toEntity(newId) }
             dao.insertContents(contentEntities)
+            return newId
         } else {
             // Update existing
-            // Transactional update: update note, clear contents, insert new contents (simple strategy)
-            // Or diffing? "Smart diff or clean replace". Clean replace is safer for ordering.
-            // But we might want to keep IDs if possible?
-            // User said: "NoteContentEntity: id: Long (Primary Key)".
-            // If we delete and re-insert, IDs change. 
-            // In a local app, this might be fine unless we have complex selection logic relying on ID.
-            // Let's try to preserve IDs if they exist.
-            
-            // Actually, for "Production Grade", we should probably update existing items and insert/delete others.
-            // BUT, implementing full diffing here might be error prone.
-            // "Either diff intelligently OR replace content cleanly and deterministically."
-            // "Replace content cleanly" -> deleteAllContentByNoteId + insertContents.
-            // This guarantees position is 100% correct according to the list.
-            
             dao.updateNote(noteEntity)
             dao.deleteAllContentByNoteId(note.id)
             val contentEntities = note.items.map { it.toEntity(note.id) }
             dao.insertContents(contentEntities)
+            return note.id
         }
     }
 

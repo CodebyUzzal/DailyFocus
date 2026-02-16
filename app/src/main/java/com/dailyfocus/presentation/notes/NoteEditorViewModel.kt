@@ -139,7 +139,10 @@ class NoteEditorViewModel @Inject constructor(
              // If ID=0 (new), and empty, don't save.
              if (note.id == 0L) return
         }
-        noteUseCases.saveNote(note)
+        val savedId = noteUseCases.saveNote(note)
+        if (note.id == 0L) {
+            _currentNote.value = note.copy(id = savedId)
+        }
     }
     
     fun deleteNote() {
