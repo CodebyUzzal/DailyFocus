@@ -59,7 +59,7 @@ class Converters {
 
     @TypeConverter
     fun fromDayOfWeekSet(days: Set<DayOfWeek>?): String? {
-        if (days == null || days.isEmpty()) return null
+        if (days == null || days.isEmpty()) return ""
         return days.joinToString(",") { it.name }
     }
 

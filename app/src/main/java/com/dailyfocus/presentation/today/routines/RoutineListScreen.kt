@@ -190,6 +190,7 @@ fun AddEditRecurringTaskDialog(
     var title by remember { mutableStateOf(taskToEdit?.title ?: "") }
     var selectedCategory by remember { mutableStateOf(taskToEdit?.category ?: TaskCategory.PERSONAL) }
     var selectedDays by remember { mutableStateOf(taskToEdit?.daysOfWeek ?: emptySet()) }
+    var showValidationError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -219,6 +220,7 @@ fun AddEditRecurringTaskDialog(
                 DaySelectionRow(
                     selectedDays = selectedDays,
                     onDayToggle = { day ->
+                        showValidationError = false
                         selectedDays = if (day in selectedDays) {
                             selectedDays - day
                         } else {
@@ -226,12 +228,21 @@ fun AddEditRecurringTaskDialog(
                         }
                     }
                 )
+                if (showValidationError) {
+                    Text(
+                        text = "At least one day must be selected.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (title.isNotBlank()) {
+                    if (selectedDays.isEmpty()) {
+                        showValidationError = true
+                    } else if (title.isNotBlank()) {
                         onConfirm(title, selectedCategory, selectedDays)
                     }
                 },

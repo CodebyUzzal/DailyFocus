@@ -46,7 +46,7 @@ fun TodayScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     
     // Collapsible state for completed tasks
-    var isCompletedExpanded by remember { mutableStateOf(false) }
+    var isCompletedExpanded by remember { mutableStateOf(true) }
     
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -204,6 +204,7 @@ fun TodayScreen(
                                     text = "Completed • ${completedTasksList.size}",
                                     style = MaterialTheme.typography.titleSmall, // Smaller, less intrusive
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(modifier = Modifier.weight(1f))
