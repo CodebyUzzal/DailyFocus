@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.core.ui.components.DailyFocusCard
 import com.dailyfocus.core.ui.components.DailyFocusScaffold
@@ -168,7 +170,15 @@ fun RecurringTaskItemCard(
             }
             Switch(
                 checked = task.isActive,
-                onCheckedChange = { onToggleActive() }
+                onCheckedChange = { onToggleActive() },
+                modifier = Modifier.scale(0.7f),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedBorderColor = Color.Transparent
+                )
             )
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)

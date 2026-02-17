@@ -89,21 +89,91 @@ fun NoteEditorScreen(
 
         containerColor = Surface1
     ) { paddingValues ->
-        if (note != null) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 24.dp),
-                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
-            ) {
-                // Title
+    if (note != null) {
+        val currentNote = note!!
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+        ) {
+            // Title
+            item {
+                TextField(
+                    value = currentNote.title ?: "",
+                    onValueChange = { viewModel.updateTitle(it) },
+                    placeholder = { Text("Title", style = MaterialTheme.typography.headlineMedium, color = Neutral90.copy(alpha = 0.5f)) },
+                    textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Neutral90),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (currentNote.isChecklist) {
+                itemsIndexed(currentNote.items, key = { _, item -> item.id.toString() + item.hashCode() }) { index, item ->
+                    ChecklistItemRow(
+                        item = item,
+                        onCheckedChange = { isChecked -> viewModel.updateChecklistItem(index, item.text, isChecked) },
+                        onTextChange = { text -> viewModel.updateChecklistItem(index, text, item.isChecked) },
+                        onDelete = { viewModel.removeChecklistItem(index) }
+                    )
+                }
                 item {
+                    // Add Item Row
+                    var newItemText by remember { mutableStateOf("") }
+                    val focusRequester = remember { FocusRequester() }
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                            .clickable { focusRequester.requestFocus() }
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, tint = Neutral90.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        TextField(
+                            value = newItemText,
+                            onValueChange = { newItemText = it },
+                            placeholder = { Text("List item", color = Neutral90.copy(alpha = 0.5f)) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (newItemText.isNotBlank()) {
+                                        viewModel.addChecklistItem(newItemText)
+                                        newItemText = ""
+                                    }
+                                }
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .focusRequester(focusRequester)
+                        )
+                    }
+                }
+            } else {
+                item {
+                    // Single expanding text field
+                    val content = currentNote.items.firstOrNull()?.text ?: ""
                     TextField(
-                        value = note!!.title ?: "",
-                        onValueChange = { viewModel.updateTitle(it) },
-                        placeholder = { Text("Title", style = MaterialTheme.typography.headlineMedium, color = Neutral90.copy(alpha = 0.5f)) },
-                        textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Neutral90),
+                        value = content,
+                        onValueChange = { viewModel.updateContent(it) },
+                        placeholder = { Text("Note", style = MaterialTheme.typography.bodyLarge, color = Neutral90.copy(alpha = 0.5f)) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Neutral90, lineHeight = androidx.compose.ui.unit.TextUnit(1.4f, androidx.compose.ui.unit.TextUnitType.Em)),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -112,79 +182,10 @@ fun NoteEditorScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                if (note!!.isChecklist) {
-                    itemsIndexed(note!!.items, key = { _, item -> item.id.toString() + item.hashCode() }) { index, item ->
-                        ChecklistItemRow(
-                            item = item,
-                            onCheckedChange = { isChecked -> viewModel.updateChecklistItem(index, item.text, isChecked) },
-                            onTextChange = { text -> viewModel.updateChecklistItem(index, text, item.isChecked) },
-                            onDelete = { viewModel.removeChecklistItem(index) }
-                        )
-                    }
-                    item {
-                        // Add Item Row
-                        var newItemText by remember { mutableStateOf("") }
-                        val focusRequester = remember { FocusRequester() }
-                        
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp)
-                                .clickable { focusRequester.requestFocus() }
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, tint = Neutral90.copy(alpha = 0.5f))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            TextField(
-                                value = newItemText,
-                                onValueChange = { newItemText = it },
-                                placeholder = { Text("List item", color = Neutral90.copy(alpha = 0.5f)) },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                ),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        if (newItemText.isNotBlank()) {
-                                            viewModel.addChecklistItem(newItemText)
-                                            newItemText = ""
-                                        }
-                                    }
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(focusRequester)
-                            )
-                        }
-                    }
-                } else {
-                    item {
-                        // Single expanding text field
-                        val content = note!!.items.firstOrNull()?.text ?: ""
-                        TextField(
-                            value = content,
-                            onValueChange = { viewModel.updateContent(it) },
-                            placeholder = { Text("Note", style = MaterialTheme.typography.bodyLarge, color = Neutral90.copy(alpha = 0.5f)) },
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Neutral90, lineHeight = androidx.compose.ui.unit.TextUnit(1.4f, androidx.compose.ui.unit.TextUnitType.Em)),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
                 }
             }
         }
+    }
         
         if (showColorPicker) {
             ModalBottomSheet(
