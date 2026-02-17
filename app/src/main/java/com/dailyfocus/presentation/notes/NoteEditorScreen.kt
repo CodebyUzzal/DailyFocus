@@ -75,72 +75,18 @@ fun NoteEditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.togglePin() }) {
+                    IconButton(onClick = { viewModel.deleteNote(); onBack() }) {
                         Icon(
-                            imageVector = if (note?.isPinned == true) Icons.Rounded.PushPin else Icons.Rounded.PushPin, // Use filled variant if available or tint
-                            contentDescription = "Pin",
-                            tint = if (note?.isPinned == true) Secondary40 else Neutral90
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Delete",
+                            tint = Error40 // Use error color for delete action
                         )
-                    }
-                    IconButton(onClick = { /* Reminder stub */ }) {
-                         Icon(Icons.Rounded.Notifications, contentDescription = "Reminder", tint = Neutral90)
-                    }
-                    IconButton(onClick = { /* Archive stub */ }) {
-                         Icon(Icons.Rounded.Archive, contentDescription = "Archive", tint = Neutral90)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Surface1)
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = Surface2,
-                contentColor = Neutral90,
-                tonalElevation = 0.dp
-            ) {
-                IconButton(onClick = { /* Add functionality stub */ }) {
-                    Icon(Icons.Outlined.AddBox, contentDescription = "Add")
-                }
-                IconButton(onClick = { showColorPicker = true }) {
-                    Icon(Icons.Outlined.Palette, contentDescription = "Color")
-                }
-                IconButton(onClick = { /* Text format stub */ }) {
-                    Icon(androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_edit), contentDescription = "Format") // Placeholder
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { /* Undo stub */ }, enabled = false) {
-                    Icon(Icons.Outlined.Undo, contentDescription = "Undo", tint = Neutral90.copy(alpha = 0.3f))
-                }
-                IconButton(onClick = { /* Redo stub */ }, enabled = false) {
-                    Icon(Icons.Outlined.Redo, contentDescription = "Redo", tint = Neutral90.copy(alpha = 0.3f))
-                }
-                Box {
-                    IconButton(onClick = { showMenu = !showMenu }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                        containerColor = Surface2
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Delete", color = Neutral90) },
-                            onClick = {
-                                viewModel.deleteNote()
-                                onBack()
-                                showMenu = false
-                            },
-                            leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = Neutral90) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Share", color = Neutral90) },
-                            onClick = { showMenu = false },
-                            leadingIcon = { Icon(Icons.Rounded.Share, contentDescription = null, tint = Neutral90) }
-                        )
-                    }
-                }
-            }
-        },
+
         containerColor = Surface1
     ) { paddingValues ->
         if (note != null) {

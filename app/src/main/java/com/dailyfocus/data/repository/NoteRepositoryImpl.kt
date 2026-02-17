@@ -64,6 +64,10 @@ class NoteRepositoryImpl @Inject constructor(
         // This is a hack. But valid for Room delete (needs PK).
     }
 
+    override suspend fun deleteAllNotes() {
+        dao.deleteAllNotes()
+    }
+
     // Mappers
 
     private fun NoteWithContent.toDomain(): Note {

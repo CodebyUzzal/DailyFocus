@@ -7,5 +7,6 @@ data class NoteUseCases(
     val deleteNote: DeleteNoteUseCase,
     val togglePin: TogglePinUseCase,
     val toggleChecklistItem: ToggleChecklistItemUseCase,
-    val reorderChecklist: ReorderChecklistUseCase
+    val reorderChecklist: ReorderChecklistUseCase,
+    val deleteAllNotes: DeleteAllNotesUseCase
 )

@@ -39,6 +39,8 @@ import com.dailyfocus.core.ui.theme.Radius
 import com.dailyfocus.core.ui.theme.Spacing
 import com.dailyfocus.domain.model.TaskCategory
 
+import com.dailyfocus.core.ui.theme.StreakRingSuccess
+
 /**
  * Premium Task Item Row.
  * Features:
@@ -66,14 +68,14 @@ fun DailyFocusTaskItem(
     
     val backgroundColor by animateColorAsState(
         targetValue = if (isCompleted) 
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) 
+            StreakRingSuccess.copy(alpha = 0.1f) // Motivating light green tint
         else 
             MaterialTheme.colorScheme.surface, // Surface with tonal elevation will create Surface2 look
         label = "background"
     )
 
     val contentAlpha by animateFloatAsState(
-        targetValue = if (isCompleted) 0.7f else 1.0f,
+        targetValue = if (isCompleted) 0.8f else 1.0f,
         label = "alpha"
     )
 
@@ -84,6 +86,7 @@ fun DailyFocusTaskItem(
 
     Surface(
         onClick = onToggle,
+        enabled = !isCompleted, // Only clickable when active
         modifier = modifier
             .fillMaxWidth()
             .alpha(contentAlpha),
@@ -101,6 +104,7 @@ fun DailyFocusTaskItem(
             // Animated Checkbox
             CircularCheckbox(
                 checked = isCompleted,
+                onToggle = onToggle,
                 modifier = Modifier.scale(checkScale)
             )
 
@@ -167,6 +171,7 @@ fun DailyFocusTaskItem(
 @Composable
 private fun CircularCheckbox(
     checked: Boolean,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val backgroundColor by animateColorAsState(
@@ -185,7 +190,8 @@ private fun CircularCheckbox(
             .background(backgroundColor, CircleShape)
             .then(
                 if (!checked) Modifier.border(2.dp, borderColor, CircleShape) else Modifier
-            ),
+            )
+            .clickable(onClick = onToggle), // Explicit click target for checkbox
         contentAlignment = Alignment.Center
     ) {
         if (checked) {

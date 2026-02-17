@@ -22,7 +22,8 @@ object DomainModule {
             deleteNote = DeleteNoteUseCase(repository),
             togglePin = TogglePinUseCase(repository),
             toggleChecklistItem = ToggleChecklistItemUseCase(repository),
-            reorderChecklist = ReorderChecklistUseCase(repository)
+            reorderChecklist = ReorderChecklistUseCase(repository),
+            deleteAllNotes = DeleteAllNotesUseCase(repository)
         )
     }
 }

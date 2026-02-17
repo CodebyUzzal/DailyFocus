@@ -31,6 +31,7 @@ fun NotesScreen(
 ) {
     val notes by viewModel.notes.collectAsState()
     var showSheet by remember { mutableStateOf(false) }
+    var showDeleteAllDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
     // Filter notes based on search query
@@ -105,15 +106,14 @@ fun NotesScreen(
                         }
                         
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Profile Placeholder
-                        Surface(
-                            shape = CircleShape,
-                            color = Secondary40,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                             Box(contentAlignment = Alignment.Center) {
-                                 Text("U", style = MaterialTheme.typography.labelMedium, color = Color.White)
-                             }
+                        
+                        // Delete All Action
+                        IconButton(onClick = { showDeleteAllDialog = true }) {
+                             Icon(
+                                 imageVector = Icons.Rounded.DeleteSweep, // Or Delete
+                                 contentDescription = "Delete All",
+                                 tint = Error40
+                             )
                         }
                     }
                 }
@@ -203,6 +203,32 @@ fun NotesScreen(
                     )
                 }
             }
+        }
+        
+        if (showDeleteAllDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAllDialog = false },
+                title = { Text("Delete All Notes?") },
+                text = { Text("This action cannot be undone. All your notes will be permanently removed.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteAllNotes()
+                            showDeleteAllDialog = false
+                        }
+                    ) {
+                        Text("Delete All", color = Error40)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteAllDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
+                containerColor = Surface3,
+                titleContentColor = Neutral90,
+                textContentColor = Neutral90
+            )
         }
     }
 }

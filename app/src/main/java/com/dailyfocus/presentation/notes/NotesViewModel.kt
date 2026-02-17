@@ -76,4 +76,10 @@ class NotesViewModel @Inject constructor(
             noteUseCases.toggleChecklistItem(note, itemIndex)
         }
     }
+
+    fun deleteAllNotes() {
+        viewModelScope.launch {
+            noteUseCases.deleteAllNotes()
+        }
+    }
 }
