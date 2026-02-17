@@ -6,22 +6,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dailyfocus.domain.model.TaskCategory
+import com.dailyfocus.domain.model.TodayTask
 
 /**
- * Bottom sheet dialog for adding a new task to today.
- * [defaultCategory] fixes the category bug — defaults to the active tab's category.
+ * Bottom sheet dialog for adding or editing a task.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskDialog(
+fun TaskEditorDialog(
+    task: TodayTask? = null,
     onDismiss: () -> Unit,
     onConfirm: (title: String, category: TaskCategory, note: String?) -> Unit,
-    defaultCategory: TaskCategory = TaskCategory.PERSONAL,
-    dialogTitle: String = "Add Task"
+    defaultCategory: TaskCategory = TaskCategory.PERSONAL
 ) {
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(defaultCategory) }
+    var title by remember { mutableStateOf(task?.title ?: "") }
+    var note by remember { mutableStateOf(task?.note ?: "") }
+    var selectedCategory by remember { mutableStateOf(task?.category ?: defaultCategory) }
+
+    val isEditing = task != null
+    val dialogTitle = if (isEditing) "Edit Focus" else "New Focus"
+    val buttonText = if (isEditing) "Save" else "Add"
 
     ModalBottomSheet(
         onDismissRequest = onDismiss
@@ -94,7 +98,7 @@ fun AddTaskDialog(
                     },
                     enabled = title.isNotBlank()
                 ) {
-                    Text("Add")
+                    Text(buttonText)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))

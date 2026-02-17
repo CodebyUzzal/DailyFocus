@@ -43,7 +43,8 @@ fun TodayScreen(
     viewModel: TodayViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showAddDialog by remember { mutableStateOf(false) }
+    var taskToEdit by remember { mutableStateOf<com.dailyfocus.domain.model.TodayTask?>(null) }
+    var showTaskEditor by remember { mutableStateOf(false) }
     
     // Collapsible state for completed tasks
     var isCompletedExpanded by remember { mutableStateOf(true) }
@@ -61,7 +62,10 @@ fun TodayScreen(
         topBar = { /* Header is inside LazyColumn */ },
         floatingActionButton = {
             PremiumExtendedFAB(
-                onClick = { showAddDialog = true },
+                onClick = { 
+                    taskToEdit = null
+                    showTaskEditor = true 
+                },
                 text = { Text("Add Task") },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 containerColor = MaterialTheme.colorScheme.primary
@@ -172,13 +176,21 @@ fun TodayScreen(
                                 note = task.note,
                                 showCategory = state.categoryFilter == null,
                                 onToggle = { viewModel.onToggleTodayTask(task) },
+                                onEdit = {
+                                    taskToEdit = task
+                                    showTaskEditor = true
+                                },
+                                onDelete = { viewModel.onDeleteTask(task) },
                                 modifier = Modifier.padding(horizontal = Spacing.m, vertical = 4.dp)
                             )
                         }
                     } else if (state.todayTasks.isEmpty()) {
                         item {
                             PremiumEmptyState(
-                                onAddFirstTask = { showAddDialog = true }
+                                onAddFirstTask = { 
+                                    taskToEdit = null
+                                    showTaskEditor = true 
+                                }
                             )
                         }
                     }
@@ -229,7 +241,7 @@ fun TodayScreen(
                                     showCategory = state.categoryFilter == null,
                                     onToggle = { viewModel.onToggleTodayTask(task) },
                                     modifier = Modifier
-                                        .padding(start = Spacing.xl, end = Spacing.m, top = 4.dp, bottom = 4.dp) // Indented
+                                        .padding(horizontal = Spacing.m, vertical = 4.dp) // Fixed width consistency
                                         .alpha(0.7f) // Reduced opacity
                                     // .animateItemPlacement() removed for build stability 
                                 )
@@ -246,15 +258,19 @@ fun TodayScreen(
         }
     }
 
-    if (showAddDialog) {
-        AddTaskDialog(
-            onDismiss = { showAddDialog = false },
+    if (showTaskEditor) {
+        TaskEditorDialog(
+            task = taskToEdit,
+            onDismiss = { showTaskEditor = false },
             onConfirm = { title, category, note ->
-                viewModel.onAddTask(title, category, note)
-                showAddDialog = false
+                if (taskToEdit != null) {
+                    viewModel.onUpdateTask(taskToEdit!!, title, category, note)
+                } else {
+                    viewModel.onAddTask(title, category, note)
+                }
+                showTaskEditor = false
             },
-            defaultCategory = state.categoryFilter ?: TaskCategory.PERSONAL,
-            dialogTitle = "New Focus"
+            defaultCategory = state.categoryFilter ?: TaskCategory.PERSONAL
         )
     }
 }

@@ -19,6 +19,8 @@ class TodayViewModel @Inject constructor(
     private val dailyBoundaryManager: DailyBoundaryManager,
     private val getTodayTasks: GetTodayTasksUseCase,
     private val addTodayTask: AddTodayTaskUseCase,
+    private val updateTodayTask: UpdateTodayTaskUseCase,
+    private val deleteTodayTask: DeleteTodayTaskUseCase,
     private val toggleTodayTask: ToggleTodayTaskUseCase,
     private val getDailyLogs: com.dailyfocus.domain.usecase.log.GetDailyLogsUseCase,
     private val preferences: AppPreferences
@@ -106,6 +108,35 @@ class TodayViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(userMessage = UiMessage.Snackbar("Failed to update: ${e.message}"))
+                }
+            }
+        }
+    }
+
+    fun onUpdateTask(task: TodayTask, title: String, category: TaskCategory, note: String?) {
+        viewModelScope.launch {
+            try {
+                val updatedTask = task.copy(
+                    title = title,
+                    category = category,
+                    note = note
+                )
+                updateTodayTask(updatedTask)
+            } catch (e: Exception) {
+                 _uiState.update {
+                    it.copy(userMessage = UiMessage.Snackbar("Failed to update task: ${e.message}"))
+                }
+            }
+        }
+    }
+
+    fun onDeleteTask(task: TodayTask) {
+        viewModelScope.launch {
+            try {
+                deleteTodayTask(task)
+            } catch (e: Exception) {
+                 _uiState.update {
+                    it.copy(userMessage = UiMessage.Snackbar("Failed to delete task: ${e.message}"))
                 }
             }
         }
